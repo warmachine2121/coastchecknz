@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stoke Meter — CoastCheck NZ</title>
+<meta name="description" content="Real-time stoke meter for NZ North Island surf and fishing conditions. When it fires, you'll know.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --deep:#060f1c; --ink:#0b1a2e; --foam:#e8f4f8;
+  --accent:#00c8f0; --kelp:#00e080; --sand:#e8c97a;
+  --fire:#ff6600; --epic:#ff00aa; --danger:#ff4455;
+  --text:#8aaccc;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body {
+  background:var(--deep);
+  color:var(--foam);
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── ANIMATED BG ── */
+.bg-fx {
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(160deg,#060f1c 0%,#0b1a2e 60%,#060f1c 100%);
+  transition:background 2s ease;
+}
+.bg-fx.firing {
+  background:linear-gradient(160deg,#1a0008 0%,#200020 40%,#001a10 100%);
+}
+
+/* Lightning bolts */
+.lightning {
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;
+}
+.lightning.strike { animation: lstrike 0.4s ease-out forwards; }
+@keyframes lstrike {
+  0%{opacity:1} 15%{opacity:0.3} 30%{opacity:1} 60%{opacity:0.5} 100%{opacity:0}
+}
+.bolt {
+  position:absolute;
+  width:2px;
+  background:linear-gradient(to bottom, transparent, #ff00aa, #00c8f0, transparent);
+  border-radius:2px;
+  filter:blur(1px);
+  box-shadow:0 0 8px #ff00aa, 0 0 20px #00c8f0;
+}
+
+/* Scanlines overlay */
+body::after {
+  content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+}
+
+/* ── NAV ── */
+.container{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 24px 100px;}
+nav{padding:22px 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,200,240,0.1);margin-bottom:40px;flex-wrap:wrap;gap:12px;}
+.nav-brand{font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),var(--kelp));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;}
+.nav-back{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text);text-decoration:none;transition:color 0.2s;}
+.nav-back:hover{color:var(--accent);}
+.live-badge{display:flex;align-items:center;gap:7px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--kelp);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--kelp);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,224,128,0.5);}50%{opacity:0.8;box-shadow:0 0 0 6px rgba(0,224,128,0);}}
+
+/* ── HERO ── */
+.hero-stoke {
+  text-align:center;
+  padding:20px 0 50px;
+  position:relative;
+}
+.hero-eyebrow {
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--fire);
+  margin-bottom:12px;
+}
+.hero-title {
+  font-family:'Bebas Neue',cursive;
+  font-size:clamp(60px,12vw,130px);
+  line-height:0.9;letter-spacing:-2px;
+  background:linear-gradient(135deg,#ff6600 0%,#ff00aa 40%,#00c8f0 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:hueshift 6s ease-in-out infinite alternate;
+}
+@keyframes hueshift {
+  0%{filter:hue-rotate(0deg);}
+  100%{filter:hue-rotate(30deg);}
+}
+.hero-sub {
+  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;
+  color:var(--text);margin-top:16px;text-transform:uppercase;
+}
+.refresh-btn {
+  margin-top:24px;
+  padding:10px 28px;
+  background:transparent;
+  border:1px solid rgba(255,102,0,0.4);
+  color:var(--fire);
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;
+  cursor:pointer;border-radius:2px;transition:all 0.3s;
+  text-transform:uppercase;
+}
+.refresh-btn:hover{background:rgba(255,102,0,0.1);border-color:var(--fire);}
+
+/* ── GLOBAL STOKE BAR ── */
+.global-stoke {
+  background:rgba(10,22,40,0.8);
+  border:1px solid rgba(255,102,0,0.2);
+  border-radius:4px;padding:24px;margin-bottom:40px;
+  position:relative;overflow:hidden;
+}
+.global-stoke-label {
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text);margin-bottom:12px;
+}
+.global-bar-bg {
+  width:100%;height:12px;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden;position:relative;
+}
+.global-bar-fill {
+  height:100%;border-radius:6px;
+  background:linear-gradient(90deg,#00e080,#00c8f0,#ff6600,#ff00aa);
+  background-size:200% 100%;
+  animation:barshift 3s ease infinite;
+  transition:width 2s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes barshift{0%{background-position:0% 50%;}100%{background-position:100% 50%;}}
+.global-score {
+  display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px;
+}
+.global-score-val {
+  font-family:'Bebas Neue',cursive;font-size:52px;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--fire),var(--epic));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;
+}
+.global-score-lbl {font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text);}
+.hot-region {font-family:'Bebas Neue',cursive;font-size:24px;color:var(--fire);letter-spacing:2px;}
+
+/* ── REGION CARDS ── */
+.regions-grid {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;
+}
+
+.region-card {
+  background:rgba(10,22,40,0.75);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:4px;padding:22px;
+  position:relative;overflow:hidden;
+  transition:all 0.4s ease;
+}
+
+/* ELECTRIFY effect */
+.region-card.epic-surf {
+  border-color:rgba(255,0,170,0.6) !important;
+  box-shadow:0 0 30px rgba(255,0,170,0.2), 0 0 60px rgba(255,0,170,0.1), inset 0 0 30px rgba(255,0,170,0.05);
+  animation:epicpulse 2s ease-in-out infinite;
+}
+.region-card.epic-fish {
+  border-color:rgba(232,201,122,0.6) !important;
+  box-shadow:0 0 30px rgba(232,201,122,0.2), 0 0 60px rgba(232,201,122,0.1), inset 0 0 30px rgba(232,201,122,0.05);
+  animation:fishpulse 2s ease-in-out infinite;
+}
+.region-card.epic-surf.epic-fish {
+  border-color:rgba(255,102,0,0.7) !important;
+  box-shadow:0 0 40px rgba(255,102,0,0.3), 0 0 80px rgba(255,102,0,0.15), inset 0 0 40px rgba(255,102,0,0.08);
+  animation:doublepulse 1.5s ease-in-out infinite;
+}
+
+@keyframes epicpulse {
+  0%,100%{box-shadow:0 0 30px rgba(255,0,170,0.2),0 0 60px rgba(255,0,170,0.1),inset 0 0 30px rgba(255,0,170,0.05);}
+  50%{box-shadow:0 0 50px rgba(255,0,170,0.4),0 0 100px rgba(255,0,170,0.2),inset 0 0 50px rgba(255,0,170,0.1);}
+}
+@keyframes fishpulse {
+  0%,100%{box-shadow:0 0 30px rgba(232,201,122,0.2),0 0 60px rgba(232,201,122,0.1),inset 0 0 30px rgba(232,201,122,0.05);}
+  50%{box-shadow:0 0 50px rgba(232,201,122,0.4),0 0 100px rgba(232,201,122,0.2),inset 0 0 50px rgba(232,201,122,0.1);}
+}
+@keyframes doublepulse {
+  0%,100%{box-shadow:0 0 40px rgba(255,102,0,0.3),0 0 80px rgba(255,102,0,0.15);}
+  50%{box-shadow:0 0 80px rgba(255,102,0,0.6),0 0 160px rgba(255,102,0,0.3);}
+}
+
+/* Electric top border */
+.region-card::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(0,200,240,0.3),transparent);
+  transition:all 0.5s;
+}
+.region-card.epic-surf::before {
+  background:linear-gradient(90deg,transparent,#ff00aa,#00c8f0,#ff00aa,transparent);
+  animation:scanline 1s linear infinite;
+  height:3px;
+}
+.region-card.epic-fish::before {
+  background:linear-gradient(90deg,transparent,var(--sand),#ff6600,var(--sand),transparent);
+  animation:scanline 1.2s linear infinite;
+  height:3px;
+}
+@keyframes scanline{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
+
+/* Voltage corners */
+.region-card.epic-surf::after, .region-card.epic-fish::after {
+  content:'⚡';
+  position:absolute;top:10px;right:12px;
+  font-size:18px;
+  animation:zapflicker 0.8s ease-in-out infinite alternate;
+}
+.region-card.epic-surf::after{color:#ff00aa;}
+.region-card.epic-fish::after{content:'🔥';animation:zapflicker 1s ease-in-out infinite alternate;}
+.region-card.epic-surf.epic-fish::after{content:'💥';}
+@keyframes zapflicker{0%{opacity:1;transform:scale(1);}100%{opacity:0.6;transform:scale(1.2);}}
+
+.region-name {
+  font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:3px;margin-bottom:4px;
+}
+.region-coast {
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);margin-bottom:16px;
+}
+
+/* STOKE METER */
+.stoke-wrap {margin-bottom:16px;}
+.stoke-row {display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.stoke-label {font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);}
+.stoke-score {font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:1px;}
+.stoke-bar-bg {width:100%;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin-bottom:10px;}
+.stoke-bar-fill {height:100%;border-radius:4px;transition:width 1.5s cubic-bezier(0.34,1.56,0.64,1);}
+
+/* INFLUENCER CARD */
+.influencer-card {
+  display:none;
+  margin-top:14px;
+  padding:14px;
+  border-radius:3px;
+  border:1px solid rgba(255,0,170,0.3);
+  background:rgba(255,0,170,0.06);
+  animation:slideup 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes slideup{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.influencer-card.visible{display:block;}
+.inf-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.inf-avatar{
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,#ff00aa,#ff6600);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;border:2px solid rgba(255,0,170,0.5);
+  flex-shrink:0;
+}
+.inf-name{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:2px;color:#ff00aa;}
+.inf-handle{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text);}
+.inf-quote{
+  font-family:'DM Sans',sans-serif;font-size:14px;color:var(--foam);
+  line-height:1.5;font-style:italic;
+  border-left:2px solid #ff00aa;padding-left:10px;margin-bottom:10px;
+}
+.inf-tiktok{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 14px;
+  background:rgba(255,0,170,0.15);
+  border:1px solid rgba(255,0,170,0.4);
+  border-radius:2px;
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:#ff00aa;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;
+}
+.inf-tiktok:hover{background:rgba(255,0,170,0.25);}
+
+/* FISHING ALERT */
+.fishing-alert {
+  display:none;
+  margin-top:10px;
+  padding:12px 14px;
+  border-radius:3px;
+  border:1px solid rgba(232,201,122,0.4);
+  background:rgba(232,201,122,0.07);
+  animation:slideup 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+.fishing-alert.visible{display:block;}
+.fishing-alert-title{
+  font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;color:var(--sand);margin-bottom:5px;
+}
+.fishing-alert-body{font-size:13px;color:var(--text);line-height:1.5;}
+
+/* CONDITIONS ROW */
+.cond-row {
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;
+  padding-top:12px;border-top:1px solid rgba(255,255,255,0.05);
+}
+.cond-chip {
+  padding:4px 10px;border-radius:2px;
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;
+  background:rgba(0,200,240,0.08);border:1px solid rgba(0,200,240,0.15);
+  color:var(--accent);
+}
+.cond-chip.hot{background:rgba(255,0,170,0.1);border-color:rgba(255,0,170,0.3);color:#ff00aa;}
+.cond-chip.warm{background:rgba(232,201,122,0.1);border-color:rgba(232,201,122,0.3);color:var(--sand);}
+
+.loading-card{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Space Mono',monospace;font-size:10px;color:var(--text);letter-spacing:2px;
+  padding:20px 0;
+  animation:blink 1.5s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.mini-spin{width:14px;height:14px;border:1.5px solid rgba(0,200,240,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── EPIC ALERT MODAL ── */
+.epic-overlay {
+  position:fixed;inset:0;z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.92);
+  backdrop-filter:blur(10px);
+  opacity:0;pointer-events:none;
+  transition:opacity 0.4s;
+}
+.epic-overlay.show{opacity:1;pointer-events:all;}
+.epic-modal {
+  max-width:560px;width:90%;
+  text-align:center;
+  animation:epicIn 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  position:relative;
+}
+@keyframes epicIn{from{opacity:0;transform:scale(0.8);}to{opacity:1;transform:scale(1);}}
+
+.epic-icon{font-size:72px;margin-bottom:16px;animation:bounce 1s ease-in-out infinite alternate;}
+@keyframes bounce{from{transform:scale(1);}to{transform:scale(1.15);}}
+.epic-title{
+  font-family:'Bebas Neue',cursive;font-size:clamp(48px,10vw,90px);letter-spacing:-1px;line-height:0.9;
+  background:linear-gradient(135deg,#ff6600,#ff00aa,#00c8f0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:8px;
+}
+.epic-region{font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:4px;color:var(--foam);margin-bottom:6px;}
+.epic-type{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--text);margin-bottom:20px;}
+.epic-conds{
+  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;
+}
+.epic-cond{
+  padding:8px 16px;border-radius:2px;
+  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);
+  color:var(--foam);
+}
+.epic-inf {
+  margin:20px auto;max-width:400px;
+  padding:16px;border-radius:4px;
+  background:rgba(255,0,170,0.08);
+  border:1px solid rgba(255,0,170,0.3);
+}
+.epic-inf-name{font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:#ff00aa;}
+.epic-inf-quote{font-size:15px;color:var(--foam);line-height:1.5;margin-top:6px;font-style:italic;}
+.epic-close{
+  margin-top:20px;padding:12px 32px;
+  background:linear-gradient(135deg,#ff6600,#ff00aa);
+  border:none;border-radius:2px;
+  color:white;font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;
+  cursor:pointer;transition:transform 0.2s;
+}
+.epic-close:hover{transform:scale(1.05);}
+
+/* Electric particles */
+.particle {
+  position:fixed;pointer-events:none;z-index:499;
+  width:4px;height:4px;border-radius:50%;
+  animation:particle-fly 1.5s ease-out forwards;
+}
+@keyframes particle-fly {
+  0%{opacity:1;transform:translate(0,0) scale(1);}
+  100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0);}
+}
+
+/* ── FOOTER ── */
+.page-footer{margin-top:60px;padding-top:22px;border-top:1px solid rgba(0,200,240,0.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
+.footer-text{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);line-height:1.8;}
+
+@media(max-width:600px){.container{padding:0 16px 80px;}.regions-grid{grid-template-columns:1fr;}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0f1a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CoastCheck">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+</head>
+<body>
+
+<div class="bg-fx" id="bgFx"></div>
+<div class="lightning" id="lightning"></div>
+
+<div class="container">
+  <nav>
+    <a href="/" class="nav-brand">CoastCheck</a>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div class="live-badge"><div class="live-dot"></div>LIVE STOKE</div>
+      <a href="/admin" class="nav-back" style="color:var(--fire);">⚙ Alerts Admin</a>
+      <a href="/" class="nav-back">← All Spots</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero-stoke">
+    <div class="hero-eyebrow">⚡ REAL-TIME CONDITION ALERTS</div>
+    <div class="hero-title">STOKE<br>METER</div>
+    <div class="hero-sub">When it fires — you'll know about it</div>
+    <button class="refresh-btn" onclick="loadAll()">↺ REFRESH CONDITIONS</button>
+  </div>
+
+  <!-- GLOBAL STOKE -->
+  <div class="global-stoke" id="globalStoke">
+    <div class="global-stoke-label">🌊 NORTH ISLAND OVERALL STOKE LEVEL</div>
+    <div class="global-bar-bg">
+      <div class="global-bar-fill" id="globalBar" style="width:0%"></div>
+    </div>
+    <div class="global-score">
+      <div>
+        <div class="global-score-val" id="globalScore">—</div>
+        <div class="global-score-lbl">STOKE SCORE / 100</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="hot-region" id="hotRegion">CHECKING...</div>
+        <div class="global-score-lbl">HOTTEST REGION RIGHT NOW</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGIONS -->
+  <div class="regions-grid" id="regionsGrid">
+    <div style="grid-column:1/-1;padding:40px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--text);">
+      <div class="mini-spin" style="width:30px;height:30px;margin:0 auto 16px;border-width:2px;"></div>
+      SCANNING CONDITIONS...
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <div class="footer-text">
+      STOKE METER — COASTCHECK NZ<br>
+      THRESHOLDS: SURF ≥ 1.5M @ 10S · WIND ≤ 15KN · FISHING: SOLUNAR + CONDITIONS
+    </div>
+    <a href="/" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--accent);text-decoration:none;">VIEW ALL SPOTS →</a>
+  </div>
+</div>
+
+<!-- EPIC ALERT MODAL -->
+<div class="epic-overlay" id="epicOverlay">
+  <div class="epic-modal" id="epicModal">
+    <div class="epic-icon" id="epicIcon">🔥</div>
+    <div class="epic-title" id="epicTitle">IT'S FIRING</div>
+    <div class="epic-region" id="epicRegion">NORTHLAND</div>
+    <div class="epic-type" id="epicType">EPIC SURF CONDITIONS</div>
+    <div class="epic-conds" id="epicConds"></div>
+    <div class="epic-inf" id="epicInf"></div>
+    <button class="epic-close" onclick="closeEpic()">LET'S GO 🤙</button>
+  </div>
+</div>
+
+<script>
+// ── REGION CONFIG ──────────────────────────────────────
+// Add your real TikTok influencers here per region
+const REGIONS = [
+  {
+    name: 'Northland',
+    coast: 'East & West Coast',
+    emoji: '🌿',
+    spots: [
+      { name:'Mangawhai Heads', lat:-36.13, lon:174.59, types:['surf','fishing'], offshoreDir:270 }, // faces NE — westerly offshore ✓
+      { name:'Te Arai Point',    lat:-36.35, lon:174.67, types:['surf','fishing'], offshoreDir:270 }, // east coast — westerly offshore ✓
+      { name:'Shipwreck Bay',   lat:-35.17, lon:173.24, types:['surf'],           offshoreDir:180 }, // faces NW — southerly offshore ✓
+      { name:'Whangarei Heads', lat:-35.83, lon:174.58, types:['surf','fishing'], offshoreDir:270 }, // faces east — westerly offshore ✓
+      { name:'Ahipara',         lat:-35.17, lon:173.16, types:['surf','fishing'], offshoreDir:155 }, // faces NNW — SSE offshore ✓
+    ],
+    influencer: {
+      name: 'WHANGAREI LOCAL',
+      handle: '@whangareisurf',
+      avatar: '🤙',
+      tiktok: 'https://tiktok.com',
+      surfQuotes: [
+        "BRO THE SETS ARE PUMPING — drop everything and get down here RIGHT NOW 🔥",
+        "This is what we wait all winter for. Conditions are absolutely FIRING up north 🌊",
+        "I've been surfing Northland my whole life and today is in the top 5. Get. In. 🤙",
+      ],
+      fishQuotes: [
+        "The snapper are absolutely going mental right now. Moon's perfect, conditions are epic 🎣",
+        "Mates just texted — they've limited out in 2 hours. Get your lines in the water NOW 🐟",
+      ]
+    },
+    // Surf thresholds
+    surfThreshold:  { minWave:1.2, maxWind:18, minPeriod:9 },
+    fishThreshold:  { maxWind:15, minSolunar:3 },
+  },
+  {
+    name: 'Auckland',
+    coast: 'West Coast & Hauraki Gulf',
+    emoji: '🌆',
+    spots: [
+      { name:'Piha',    lat:-36.95, lon:174.46, types:['surf'],           offshoreDir:90  }, // west coast — easterly offshore
+      { name:'Muriwai', lat:-36.83, lon:174.44, types:['surf','fishing'], offshoreDir:90  }, // west coast
+      { name:'Raglan',  lat:-37.80, lon:174.87, types:['surf'],           offshoreDir:135 }, // faces W/WSW — ESE offshore ✓
+    ],
+    influencer: {
+      name: 'WEST COAST CREW',
+      handle: '@westcoastnz',
+      avatar: '🏄',
+      tiktok: 'https://tiktok.com',
+      surfQuotes: [
+        "Piha is GOING OFF right now. Biggest clean swell of the season — get west! 🌊",
+        "West coast is firing and the crowds haven't hit yet. Your window is NOW 🔥",
+        "Sets stacking on the horizon at Muriwai. This is it lads 🤙",
+      ],
+      fishQuotes: [
+        "Kahawai are schooling off Muriwai — conditions are perfect right now 🎣",
+        "Solunar is peak and there's no wind. The snapper bite is going to be EPIC today 🐟",
+      ]
+    },
+    surfThreshold: { minWave:1.5, maxWind:20, minPeriod:9 },
+    fishThreshold: { maxWind:12, minSolunar:3 },
+  },
+  {
+    name: 'Coromandel',
+    coast: 'East Coast Peninsula',
+    emoji: '🌴',
+    spots: [
+      { name:'Whangamata', lat:-37.20, lon:175.87, types:['surf','fishing'], offshoreDir:225 }, // faces NE — SW offshore ✓
+      { name:'Hahei',      lat:-36.87, lon:175.78, types:['surf'],           offshoreDir:270 }, // faces east — westerly offshore ✓
+      { name:'Whitianga',  lat:-36.83, lon:175.69, types:['fishing','boating'],offshoreDir:270 }, // faces east — westerly offshore ✓
+    ],
+    influencer: {
+      name: 'COROMANDEL VIBES',
+      handle: '@coromandelsurf',
+      avatar: '🌺',
+      tiktok: 'https://tiktok.com',
+      surfQuotes: [
+        "Whangamata is pumping! Long walls, clean faces — summer vibes are real 🌊",
+        "The Coro is firing. Pack the board and get on the road NOW 🔥",
+      ],
+      fishQuotes: [
+        "Mercury Bay is completely calm and the snapper are active. Perfect fishing day 🎣",
+        "Conditions and solunar are both peak — the Coromandel fishing gods are smiling today 🐟",
+      ]
+    },
+    surfThreshold: { minWave:1.0, maxWind:16, minPeriod:8 },
+    fishThreshold: { maxWind:12, minSolunar:3 },
+  },
+  {
+    name: 'Taranaki',
+    coast: 'West Coast',
+    emoji: '🌋',
+    spots: [
+      { name:'New Plymouth', lat:-39.06, lon:174.08, types:['surf','fishing'], offshoreDir:90  }, // faces west — easterly offshore ✓
+      { name:'Back Beach',    lat:-39.05, lon:174.01, types:['surf'],           offshoreDir:90  }, // left+right reef — E offshore ✓ (surf-forecast verified)
+      { name:'Bell Block Reef', lat:-39.02, lon:174.10, types:['surf'],           offshoreDir:135 }, // offshore left reef — SE offshore ✓ (surf-forecast verified)
+      { name:'Fitzroy',      lat:-39.04, lon:174.10, types:['surf'],           offshoreDir:135 }, // SE offshore ✓ (surf-forecast verified)
+      { name:'The Groyne',   lat:-39.045,lon:174.115,types:['surf'],           offshoreDir:135 }, // east end Fitzroy beach — SE offshore ✓
+      { name:'Oakura',       lat:-39.16, lon:173.94, types:['surf','fishing'], offshoreDir:90  }, // faces west — easterly offshore ✓
+      { name:'Stent Road',   lat:-39.28, lon:173.84, types:['surf'],           offshoreDir:90  }, // faces NW — pure E offshore ✓ (surf-forecast.com verified)
+      { name:'Opunake',      lat:-39.45, lon:173.86, types:['surf','fishing'], offshoreDir:90  }, // faces west — easterly offshore ✓
+    ],
+    surfThreshold: { minWave:1.0, maxWind:16, minPeriod:8 },
+    fishThreshold: { maxWind:14, minSolunar:3 },
+    influencer: {
+      name: 'Taranaki Local',
+      handle: '@taranakisurf',
+      avatar: '🌋',
+      tiktok: 'https://tiktok.com/@taranakisurf',
+      surfQuotes: [
+        "Mountain in the background, barrels in the foreground. Taranaki going off 🌋",
+        "Stent Road firing — get in the car NOW 🔥",
+        "The naki delivering the goods again. Offshore and pumping 🤙",
+      ],
+      fishQuotes: [
+        "Flat seas and solunar peaking — best snapper session of the year 🎣",
+        "Taranaki coast delivering the goods on all fronts today 🐟",
+      ],
+    },
+  },
+  {
+    name: 'Bay of Plenty',
+    coast: 'East Coast BOP',
+    emoji: '🏔️',
+    spots: [
+      { name:'Mt Maunganui', lat:-37.64, lon:176.19, types:['surf','fishing'], offshoreDir:202 }, // faces NNE — SSW offshore ✓
+      { name:'Waihi Beach',  lat:-37.39, lon:175.93, types:['surf'],           offshoreDir:225 }, // faces NE — SW offshore ✓
+      { name:'Ohope',        lat:-37.97, lon:177.10, types:['surf','fishing'], offshoreDir:225 }, // faces NE — SW offshore ✓
+    ],
+    influencer: {
+      name: 'THE MOUNT',
+      handle: '@mountsurfnz',
+      avatar: '🌋',
+      tiktok: 'https://tiktok.com',
+      surfQuotes: [
+        "The Mount is PUMPING. Long peeling rights all the way to the beach 🌊🔥",
+        "BOP firing up — sets stacking and the wind is offshore. GET IN THE WATER 🤙",
+      ],
+      fishQuotes: [
+        "Out of Tauranga this morning — snapper going absolutely mental. Top day 🎣",
+        "Wind is offshore, solunar is perfect. Best fishing conditions of the month right here 🐟",
+      ]
+    },
+    surfThreshold: { minWave:1.2, maxWind:18, minPeriod:9 },
+    fishThreshold: { maxWind:14, minSolunar:3 },
+  },
+  {
+    name: 'East Cape',
+    coast: 'East Coast',
+    emoji: '🌅',
+    spots: [
+      { name:'Gisborne',   lat:-38.66, lon:178.01, types:['surf','fishing'], offshoreDir:315 }, // faces SE — NW offshore ✓
+      { name:'Wainui',     lat:-38.62, lon:178.10, types:['surf'],           offshoreDir:300 }, // faces SE — WNW/NW offshore ✓ (surf-forecast verified)
+      { name:'Makorori',   lat:-38.56, lon:178.11, types:['surf'],           offshoreDir:315 }, // faces SE — NNW offshore ✓
+      { name:'Tolaga Bay', lat:-38.37, lon:178.30, types:['fishing'],        offshoreDir:270 }, // faces east — westerly offshore ✓
+    ],
+    influencer: {
+      name: 'GIZZY LOCAL',
+      handle: '@gizzysurfnz',
+      avatar: '☀️',
+      tiktok: 'https://tiktok.com',
+      surfQuotes: [
+        "First to see the sun AND first to score epic surf — Gizzy is going off! 🌅🔥",
+        "East Cape is pumping. Long walls and no one out yet. Come get some 🌊",
+      ],
+      fishQuotes: [
+        "The East Cape fishing is LEGENDARY today. Conditions couldn't be better 🎣",
+        "Solunar peak + calm seas + warm water = best fishing on the East Coast today 🐟",
+      ]
+    },
+    surfThreshold: { minWave:1.3, maxWind:18, minPeriod:9 },
+    fishThreshold: { maxWind:14, minSolunar:3 },
+  },
+  {
+    name: 'Wellington',
+    coast: 'Cook Strait & Kapiti',
+    emoji: '💨',
+    spots: [
+      { name:'Lyall Bay',    lat:-41.33, lon:174.80, types:['surf'],           offshoreDir:0   }, // faces south — northerly offshore ✓
+      { name:'Paraparaumu', lat:-40.91, lon:174.98, types:['surf','fishing'], offshoreDir:90  }, // faces west — easterly offshore ✓
+    ],
+    influencer: {
+      name: 'WINDY WELLY',
+      handle: '@wellysurf',
+      avatar: '🌬️',
+      tiktok: 'https://tiktok.com',
+      surfQuotes: [
+        "Welly actually went GLASSY. Lyall Bay is pumping clean — this is a rare one! 🔥",
+        "The wind gods have smiled on Wellington today. Get to Lyall Bay NOW 🌊",
+      ],
+      fishQuotes: [
+        "Kapiti Coast flat calm — rare as gold. Snapper should be going mental 🎣",
+        "Cook Strait settled down and the solunar is peaking. Epic fishing window 🐟",
+      ]
+    },
+    surfThreshold: { minWave:1.0, maxWind:15, minPeriod:8 },
+    fishThreshold: { maxWind:12, minSolunar:3 },
+  },
+];
+
+// ── SOLUNAR RATING ─────────────────────────────────────
+function getSolunarRating() {
+  const knownNew = new Date('2024-01-11T00:00:00Z');
+  const phase = ((Date.now() - knownNew) / 86400000 % 29.53 + 29.53) % 29.53 / 29.53;
+  const dFromFull = Math.abs(phase - 0.5);
+  const dFromNew  = Math.min(phase, 1 - phase);
+  return Math.max(1, Math.round(5 - Math.min(dFromFull, dFromNew) * 20));
+}
+
+// ── STOKE SCORE CALC ───────────────────────────────────
+// How many degrees between two compass angles (0-180)
+function angleDiff(a, b) {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+// windQuality removed — direction/speed logic now in calcStokeScore directly
+
+function calcStokeScore(wind_kn, wind_dir, wave_h, wave_period, offshore_dir, threshold) {
+  const diff = angleDiff(wind_dir, offshore_dir);
+
+  // Dead onshore — hard cap, never epic
+  if (diff > 120) return Math.min(15, Math.round(wave_h * 4));
+
+  let score = 0;
+
+  // ── WAVE HEIGHT (0-40pts): 20pts at minWave, 40pts at minWave*2 ──
+  if (wave_h >= threshold.minWave) {
+    const excess = (wave_h - threshold.minWave) / threshold.minWave;
+    score += Math.min(40, 20 + excess * 20);
+  }
+
+  // ── WAVE PERIOD (0-25pts): 15pts at minPeriod, 25pts at minPeriod+4s ──
+  if (wave_period >= threshold.minPeriod) {
+    const excess = (wave_period - threshold.minPeriod) / 4.0;
+    score += Math.min(25, 15 + excess * 10);
+  }
+
+  // ── WIND DIRECTION (0-25pts) — direction is king ──
+  // Separated from speed so light offshore winds score high correctly
+  const overWind = wind_kn > threshold.maxWind;
+  let dirPts = 0;
+  if      (diff <= 30)  dirPts = 25;  // offshore — perfect
+  else if (diff <= 60)  dirPts = 18;  // cross-offshore — good
+  else if (diff <= 90)  dirPts = 8;   // cross-shore — mediocre
+  else if (diff <= 120) dirPts = 2;   // cross-onshore — poor
+  // If over maxWind: offshore but too strong = choppy surface, heavily penalise
+  if (overWind) dirPts = Math.round(dirPts * 0.3);
+  score += dirPts;
+
+  // ── WIND SPEED BONUS (0-10pts): light offshore winds = ideal ──
+  if (!overWind) {
+    if (wind_kn <= 8) {
+      score += 10; // glassy/light — perfect
+    } else {
+      score += Math.round((1 - (wind_kn - 8) / (threshold.maxWind - 8)) * 8);
+    }
+  }
+
+  return Math.min(100, Math.round(score));
+}
+
+function calcFishScore(wind_kn, wave_h, rain, threshold) {
+  let score = 0;
+  let breakdown = {};
+
+  // ── 1. SOLUNAR (0–35pts) — moon phase is king for fishing
+  // Full moon and new moon = peak feeding. Quarter moons = slower.
+  const sol = getSolunarRating();
+  const solScore = Math.round((sol / 5) * 35);
+  score += solScore;
+  breakdown.solunar = solScore;
+
+  // ── 2. WIND SPEED (0–25pts) — calm = good, rough = fish go deep
+  // Ideal: under 10kn. Still fishable to maxWind. Above = poor.
+  let windScore = 0;
+  if (wind_kn <= 10) {
+    windScore = 25; // glassy — ideal
+  } else if (wind_kn <= threshold.maxWind) {
+    windScore = Math.round(((threshold.maxWind - wind_kn) / (threshold.maxWind - 10)) * 20);
+  } else {
+    windScore = 0; // too rough
+  }
+  score += windScore;
+  breakdown.wind = windScore;
+
+  // ── 3. WAVE HEIGHT (0–20pts) — calmer seas = better fishing
+  // Flat to small chop is ideal. Big swell pushes fish around.
+  let waveScore = 0;
+  if (wave_h <= 0.5)       waveScore = 20; // glassy flat
+  else if (wave_h <= 1.0)  waveScore = 16; // small chop — good
+  else if (wave_h <= 1.5)  waveScore = 10; // moderate — ok
+  else if (wave_h <= 2.0)  waveScore = 4;  // rough — poor
+  else                     waveScore = 0;  // too rough
+  score += waveScore;
+  breakdown.waves = waveScore;
+
+  // ── 4. BAROMETRIC PRESSURE TREND (0–12pts)
+  // Rain = falling pressure = fish feed aggressively just BEFORE rain
+  // No rain = stable/rising = good steady feeding
+  let baroScore = 0;
+  if (rain <= 0)       baroScore = 12; // stable/rising — consistent bite
+  else if (rain < 0.5) baroScore = 10; // light rain — pressure just dropped, fish active
+  else if (rain < 2)   baroScore = 6;  // moderate rain — pressure falling
+  else                 baroScore = 2;  // heavy rain — fish go deep
+  score += baroScore;
+  breakdown.baro = baroScore;
+
+  // ── 5. TIME OF DAY BONUS (0–8pts)
+  // Dawn and dusk are peak feeding times. Matches solunar minor periods.
+  const hour = new Date().getHours();
+  let timeScore = 0;
+  if (hour >= 5  && hour <= 8)  timeScore = 8; // dawn — peak
+  else if (hour >= 17 && hour <= 20) timeScore = 8; // dusk — peak
+  else if (hour >= 9  && hour <= 11) timeScore = 4; // morning — good
+  else if (hour >= 14 && hour <= 16) timeScore = 4; // afternoon — ok
+  else if (hour >= 0  && hour <= 4)  timeScore = 2; // night — some species active
+  else timeScore = 2;
+  score += timeScore;
+  breakdown.timeOfDay = timeScore;
+
+  return { score: Math.min(100, Math.round(score)), breakdown, sol };
+}
+
+// Wrapper for simple score number (backwards compat)
+function getFishScore(wind_kn, wave_h, rain, threshold) {
+  return calcFishScore(wind_kn, wave_h, rain, threshold).score;
+}
+
+function stokeColor(score) {
+  if (score >= 80) return '#ff00aa';
+  if (score >= 60) return '#ff6600';
+  if (score >= 40) return '#ffd600';
+  if (score >= 20) return '#00c8f0';
+  return '#8aaccc';
+}
+
+function stokeLabel(score) {
+  if (score >= 85) return '🔥 FIRING';
+  if (score >= 65) return '⚡ EPIC';
+  if (score >= 55) return '🌊 PUMPING';
+  if (score >= 40) return '✓ SOLID';
+  if (score >= 25) return '◈ AVERAGE';
+  return '— FLAT';
+}
+
+// ── RANDOM QUOTE ──────────────────────────────────────
+function rndQuote(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ── EPIC ALERT ────────────────────────────────────────
+let epicQueue = [];
+let epicShowing = false;
+
+function queueEpic(data) {
+  epicQueue.push(data);
+  if (!epicShowing) showNextEpic();
+}
+
+function showNextEpic() {
+  if (!epicQueue.length) { epicShowing = false; return; }
+  epicShowing = true;
+  const d = epicQueue.shift();
+
+  document.getElementById('epicIcon').textContent  = d.icon;
+  document.getElementById('epicTitle').textContent = d.title;
+  document.getElementById('epicRegion').textContent = d.region;
+  document.getElementById('epicType').textContent  = d.type;
+
+  document.getElementById('epicConds').innerHTML = d.conds.map(c =>
+    `<div class="epic-cond">${c}</div>`).join('');
+
+  document.getElementById('epicInf').innerHTML = `
+    <div class="epic-inf-name">${d.inf.name} <span style="font-size:14px;color:var(--text);">${d.inf.handle}</span></div>
+    <div class="epic-inf-quote">"${d.quote}"</div>
+  `;
+
+  document.getElementById('epicOverlay').classList.add('show');
+  spawnParticles(d.color);
+  triggerLightning();
+  document.getElementById('bgFx').classList.add('firing');
+}
+
+function closeEpic() {
+  document.getElementById('epicOverlay').classList.remove('show');
+  document.getElementById('bgFx').classList.remove('firing');
+  setTimeout(showNextEpic, 800);
+}
+
+// ── PARTICLES ─────────────────────────────────────────
+function spawnParticles(color) {
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left:${Math.random()*100}vw;
+      top:${Math.random()*100}vh;
+      background:${color};
+      box-shadow:0 0 6px ${color};
+      --tx:${(Math.random()-0.5)*200}px;
+      --ty:${(Math.random()-0.5)*200}px;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1500);
+  }
+}
+
+// ── LIGHTNING ─────────────────────────────────────────
+function triggerLightning() {
+  const l = document.getElementById('lightning');
+  l.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const b = document.createElement('div');
+    b.className = 'bolt';
+    b.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${Math.random()*30}%;
+      height:${100 + Math.random()*200}px;
+      opacity:${0.3 + Math.random()*0.7};
+      transform:rotate(${(Math.random()-0.5)*20}deg);
+    `;
+    l.appendChild(b);
+  }
+  l.classList.add('strike');
+  setTimeout(() => { l.classList.remove('strike'); l.innerHTML=''; }, 600);
+}
+
+// ── FETCH ONE REGION ──────────────────────────────────
+async function fetchRegion(region) {
+  // Average conditions across all spots in region
+  const results = await Promise.allSettled(region.spots.map(async spot => {
+    const [lr, mr] = await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${spot.lat}&longitude=${spot.lon}&current=wind_speed_10m,wind_direction_10m,precipitation&timezone=Pacific%2FAuckland&wind_speed_unit=ms`),
+      fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${spot.lat}&longitude=${spot.lon}&current=wave_height,wave_period&timezone=Pacific%2FAuckland`)
+    ]);
+    const ld = await lr.json();
+    const md = await mr.json();
+    return {
+      name:        spot.name,
+      types:       spot.types,
+      offshoreDir: spot.offshoreDir ?? 270,
+      wind_kn:     ld.current.wind_speed_10m * 1.94384,
+      wind_dir:    ld.current.wind_direction_10m,
+      wave_h:      md.current?.wave_height  ?? 0,
+      wave_period: md.current?.wave_period  ?? 0,
+      rain:        ld.current.precipitation ?? 0,
+    };
+  }));
+
+  const valid = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+  if (!valid.length) return null;
+
+  // Find best surf spot
+  const surfSpots = valid.filter(s => s.types.includes('surf'));
+  const fishSpots = valid.filter(s => s.types.includes('fishing'));
+
+  const bestSurf = surfSpots.reduce((best, s) => {
+    const offDir = s.offshoreDir ?? 270; // default westerly offshore if not set
+    const sc = calcStokeScore(s.wind_kn, s.wind_dir, s.wave_h, s.wave_period, offDir, region.surfThreshold);
+    return sc > (best?.score ?? -1) ? { ...s, score: sc } : best;
+  }, null);
+
+  const bestFish = fishSpots.reduce((best, s) => {
+    const result = calcFishScore(s.wind_kn, s.wave_h ?? 0, s.rain ?? 0, region.fishThreshold);
+    return result.score > (best?.score ?? -1) ? { ...s, score: result.score, fishBreakdown: result.breakdown, sol: result.sol } : best;
+  }, null);
+
+  // Average wind across all spots
+  const avgWind = valid.reduce((sum,s) => sum + s.wind_kn, 0) / valid.length;
+
+  return { bestSurf, bestFish, avgWind, spotCount: valid.length };
+}
+
+// ── RENDER REGION CARD ────────────────────────────────
+function renderRegionCard(region, data) {
+  const el = document.getElementById(`region-${region.name}`);
+  if (!el || !data) return;
+
+  const { bestSurf, bestFish, avgWind } = data;
+  const surfScore = bestSurf?.score ?? 0;
+  const fishScore = bestFish?.score ?? 0;
+
+  const overallScore = Math.round(Math.max(surfScore, fishScore));
+  const isEpicSurf = surfScore >= 65;
+  const isEpicFish = fishScore >= 65;
+
+  // Update classes
+  el.classList.remove('epic-surf','epic-fish');
+  if (isEpicSurf) el.classList.add('epic-surf');
+  if (isEpicFish) el.classList.add('epic-fish');
+
+  const surfColor = stokeColor(surfScore);
+  const fishColor = stokeColor(fishScore);
+
+  // Build conditions chips
+  const chips = [];
+  if (bestSurf) {
+    const offDir  = bestSurf.offshoreDir ?? 270;
+    const wDiff   = angleDiff(bestSurf.wind_dir, offDir);
+    const windLbl = wDiff <= 45 ? '✓ OFFSHORE' : wDiff <= 90 ? '◈ CROSS-SHORE' : '✗ ONSHORE';
+    const windCls = wDiff <= 45 ? ' hot' : '';
+    chips.push(`<span class="cond-chip${isEpicSurf?' hot':''}">🌊 ${bestSurf.wave_h.toFixed(1)}m @ ${bestSurf.wave_period.toFixed(0)}s</span>`);
+    chips.push(`<span class="cond-chip${windCls}">💨 ${bestSurf.wind_kn.toFixed(0)}kn ${windLbl}</span>`);
+  }
+  if (isEpicFish) chips.push(`<span class="cond-chip warm">🎣 FISHING ${stokeLabel(fishScore)}</span>`);
+
+  // Influencer section
+  const showInf = isEpicSurf;
+  const infHtml = showInf ? `
+    <div class="influencer-card visible">
+      <div class="inf-header">
+        <div class="inf-avatar">${region.influencer.avatar}</div>
+        <div>
+          <div class="inf-name">${region.influencer.name}</div>
+          <div class="inf-handle">${region.influencer.handle}</div>
+        </div>
+      </div>
+      <div class="inf-quote">"${rndQuote(region.influencer.surfQuotes)}"</div>
+      <a class="inf-tiktok" href="${region.influencer.tiktok}" target="_blank">
+        <span>♪</span> VIEW ON TIKTOK
+      </a>
+    </div>` : '';
+
+  // Fishing alert
+  const fishHtml = isEpicFish ? `
+    <div class="fishing-alert visible">
+      <div class="fishing-alert-title">🎣 EPIC FISHING WINDOW — ${fishScore}/100</div>
+      <div class="fishing-alert-body">
+        ${rndQuote(region.influencer.fishQuotes)}<br>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;background:rgba(232,201,122,0.1);border:1px solid rgba(232,201,122,0.2);border-radius:2px;color:var(--sand);">🌙 SOLUNAR ${bestFish?.sol ?? getSolunarRating()}/5</span>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;background:rgba(0,200,240,0.08);border:1px solid rgba(0,200,240,0.15);border-radius:2px;color:var(--accent);">💨 ${avgWind.toFixed(0)}KN</span>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;background:rgba(0,200,240,0.08);border:1px solid rgba(0,200,240,0.15);border-radius:2px;color:var(--accent);">🌊 ${(bestFish?.wave_h ?? 0).toFixed(1)}M SEAS</span>
+          ${new Date().getHours() >= 5 && new Date().getHours() <= 8 ? `<span style="font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;background:rgba(232,201,122,0.15);border:1px solid rgba(232,201,122,0.3);border-radius:2px;color:var(--sand);">🌅 DAWN PEAK</span>` : ''}
+          ${new Date().getHours() >= 17 && new Date().getHours() <= 20 ? `<span style="font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;background:rgba(232,201,122,0.15);border:1px solid rgba(232,201,122,0.3);border-radius:2px;color:var(--sand);">🌇 DUSK PEAK</span>` : ''}
+        </div>
+      </div>
+    </div>` : '';
+
+  el.innerHTML = `
+    <div class="region-name">${region.emoji} ${region.name}</div>
+    <div class="region-coast">${region.coast}</div>
+
+    <div class="stoke-wrap">
+
+      <div style="background:rgba(0,200,240,0.05);border:1px solid rgba(0,200,240,0.12);border-radius:4px;padding:10px 12px;margin-bottom:8px;">
+        <div class="stoke-row">
+          <div class="stoke-label" style="color:var(--accent);letter-spacing:2px;">🏄 SURF</div>
+          <div class="stoke-score" style="color:${surfColor};font-size:13px;">${stokeLabel(surfScore)}</div>
+        </div>
+        <div class="stoke-bar-bg" style="margin-top:6px;">
+          <div class="stoke-bar-fill" style="width:${surfScore}%;background:${surfColor};box-shadow:0 0 8px ${surfColor}40;"></div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(138,172,204,0.5);margin-top:5px;letter-spacing:1px;">${surfScore}/100 · ${bestSurf ? bestSurf.name : 'No surf spots'}</div>
+      </div>
+
+      <div style="background:${isEpicFish?'rgba(232,201,122,0.08)':'rgba(232,201,122,0.04)'};border:1px solid ${isEpicFish?'rgba(232,201,122,0.4)':'rgba(232,201,122,0.12)'};border-radius:4px;padding:10px 12px;${isEpicFish?'box-shadow:0 0 20px rgba(232,201,122,0.15);':''}">
+        <div class="stoke-row">
+          <div class="stoke-label" style="color:var(--sand);letter-spacing:2px;">🎣 FISHING</div>
+          <div class="stoke-score" style="color:${fishColor};font-size:13px;">${stokeLabel(fishScore)}</div>
+        </div>
+        <div class="stoke-bar-bg" style="margin-top:6px;">
+          <div class="stoke-bar-fill" style="width:${fishScore}%;background:${fishColor};box-shadow:0 0 8px ${fishColor}40;"></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+          <span style="font-family:'Space Mono',monospace;font-size:8px;padding:1px 5px;background:rgba(232,201,122,0.08);border:1px solid rgba(232,201,122,0.15);border-radius:2px;color:var(--sand);">🌙 SOLUNAR ${bestFish?.sol ?? getSolunarRating()}/5</span>
+          <span style="font-family:'Space Mono',monospace;font-size:8px;padding:1px 5px;background:rgba(0,200,240,0.06);border:1px solid rgba(0,200,240,0.12);border-radius:2px;color:var(--accent);">${(bestFish?.wave_h??0)<=0.5?'🌊 GLASSY':(bestFish?.wave_h??0)<=1.0?'🌊 FLAT SEAS':(bestFish?.wave_h??0)<=1.5?'🌊 CALM':'🌊 ${(bestFish?.wave_h??0).toFixed(1)}M SEAS'}</span>
+          <span style="font-family:'Space Mono',monospace;font-size:8px;padding:1px 5px;background:rgba(0,200,240,0.06);border:1px solid rgba(0,200,240,0.12);border-radius:2px;color:var(--accent);">💨 ${avgWind.toFixed(0)}KN</span>
+          ${fishScore >= 65 ? `<span style="font-family:'Space Mono',monospace;font-size:8px;padding:1px 5px;background:rgba(232,201,122,0.15);border:1px solid rgba(232,201,122,0.35);border-radius:2px;color:var(--sand);animation:ezap 1s ease-in-out infinite alternate;">🔥 EPIC WINDOW</span>` : ''}
+        </div>
+      </div>
+
+    </div>
+
+    <div class="cond-row">${chips.join('')}</div>
+
+    ${infHtml}
+    ${fishHtml}
+  `;
+
+  return { surfScore, fishScore, overallScore, region };
+}
+
+
+// ── EMAIL ALERTS ──────────────────────────────────────
+function fireEmailAlert(region, alertType, conditions, stokeScore) {
+  try {
+    // Read config from localStorage (set via admin.html)
+    const cfg      = JSON.parse(localStorage.getItem('cc_ejConfig') || 'null');
+    const emails   = JSON.parse(localStorage.getItem('cc_infEmails') || '{}');
+    const thresh   = JSON.parse(localStorage.getItem('cc_thresholds') || '{}');
+    const cooldown = thresh.cooldown ?? 6;
+    const email    = emails[region];
+
+    if (!cfg?.publicKey || !email) return; // not configured
+
+    // Cooldown check
+    const lastKey = 'cc_lastAlert_' + region;
+    const lastSent = parseFloat(localStorage.getItem(lastKey) || '0');
+    const hoursSince = (Date.now() - lastSent) / 3600000;
+    if (hoursSince < cooldown) return; // still in cooldown
+
+    emailjs.init(cfg.publicKey);
+    emailjs.send(cfg.serviceId, cfg.templateId, {
+      to_email:    email,
+      inf_name:    email,
+      region:      region,
+      alert_type:  alertType,
+      conditions:  conditions,
+      stoke_score: stokeScore,
+      url:         'https://coastcheck.nz/stoke.html',
+    }).then(() => {
+      localStorage.setItem(lastKey, Date.now().toString());
+      console.log(`✓ Alert sent → ${email} (${region} ${alertType})`);
+    }).catch(e => {
+      console.warn('Email alert failed:', e);
+    });
+  } catch(e) {
+    console.warn('fireEmailAlert error:', e);
+  }
+}
+
+// ── LOAD ALL ──────────────────────────────────────────
+async function loadAll() {
+  // Reset
+  document.getElementById('bgFx').classList.remove('firing');
+  epicQueue = [];
+
+  // Build skeleton cards
+  document.getElementById('regionsGrid').innerHTML = REGIONS.map(r => `
+    <div class="region-card" id="region-${r.name}">
+      <div class="region-name">${r.emoji} ${r.name}</div>
+      <div class="region-coast">${r.coast}</div>
+      <div class="loading-card"><div class="mini-spin"></div>SCANNING...</div>
+    </div>
+  `).join('');
+
+  // Fetch all regions in parallel
+  const scores = [];
+  await Promise.all(REGIONS.map(async region => {
+    const data = await fetchRegion(region);
+    const result = renderRegionCard(region, data);
+    if (result) scores.push(result);
+
+    // Trigger epic alerts for firing conditions
+    if (result?.surfScore >= 65) {
+      // Fire email alert
+      const surfConds = `🌊 ${data.bestSurf.wave_h.toFixed(1)}m @ ${data.bestSurf.wave_period.toFixed(0)}s · 💨 ${data.bestSurf.wind_kn.toFixed(0)}kn · 📍 ${data.bestSurf.name}`;
+      fireEmailAlert(region.name, 'EPIC SURF', surfConds, result.surfScore);
+
+      setTimeout(() => {
+        queueEpic({
+          icon: '🔥',
+          title: "IT'S FIRING",
+          region: region.name.toUpperCase(),
+          type: 'EPIC SURF CONDITIONS',
+          color: '#ff00aa',
+          conds: [
+            `🌊 ${data.bestSurf.wave_h.toFixed(1)}m @ ${data.bestSurf.wave_period.toFixed(0)}s`,
+            `💨 ${data.bestSurf.wind_kn.toFixed(0)}kn`,
+            `📍 ${data.bestSurf.name}`,
+          ],
+          inf: region.influencer,
+          quote: rndQuote(region.influencer.surfQuotes),
+        });
+      }, 1500);
+    }
+
+    if (result?.fishScore >= 65) {
+      // Fire email alert
+      const fishConds = `🌙 Solunar ${getSolunarRating()}/5 · 💨 Wind ${data.avgWind.toFixed(0)}kn · 🎯 ${data.bestFish?.name ?? region.name}`;
+      fireEmailAlert(region.name, 'EPIC FISHING', fishConds, result.fishScore);
+
+      setTimeout(() => {
+        queueEpic({
+          icon: '🎣',
+          title: 'FISH ON',
+          region: region.name.toUpperCase(),
+          type: 'EPIC FISHING CONDITIONS',
+          color: '#e8c97a',
+          conds: [
+            `🌙 Solunar ${getSolunarRating()}/5`,
+            `💨 Wind ${data.avgWind.toFixed(0)}kn`,
+            `🎯 ${data.bestFish?.name ?? region.name}`,
+          ],
+          inf: region.influencer,
+          quote: rndQuote(region.influencer.fishQuotes),
+        });
+      }, 2500);
+    }
+  }));
+
+  // Update global stoke
+  if (scores.length) {
+    const globalScore = Math.round(scores.reduce((s,r) => s + r.overallScore, 0) / scores.length);
+    const hottest = scores.reduce((best,r) => r.overallScore > best.overallScore ? r : best);
+    document.getElementById('globalBar').style.width = globalScore + '%';
+    document.getElementById('globalScore').textContent = globalScore;
+    document.getElementById('hotRegion').textContent = hottest.region.name.toUpperCase();
+
+    // Check if anything actually fired
+    const anyEpicSurf = scores.some(r => r.surfScore >= 70);
+    const anyEpicFish = scores.some(r => r.fishScore >= 70);
+    const anythingFiring = anyEpicSurf || anyEpicFish;
+
+    // Update status banner
+    const statusBanner = document.getElementById('globalStoke');
+    if (!anythingFiring) {
+      // Nothing firing — show calm state
+      statusBanner.style.borderColor = 'rgba(0,200,240,0.15)';
+      statusBanner.innerHTML = `
+        <div class="global-stoke-label">🌊 NORTH ISLAND OVERALL STOKE LEVEL</div>
+        <div class="global-bar-bg">
+          <div class="global-bar-fill" style="width:${globalScore}%"></div>
+        </div>
+        <div class="global-score">
+          <div>
+            <div class="global-score-val" style="font-size:36px;color:var(--text);">${globalScore}</div>
+            <div class="global-score-lbl">STOKE SCORE / 100</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:32px;margin-bottom:6px;">🤙</div>
+            <div style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;color:var(--text);">NOTHING FIRING RIGHT NOW</div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text);margin-top:4px;letter-spacing:1px;">CHECK BACK LATER — REFRESHES EVERY 15 MINS</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:14px;background:rgba(0,200,240,0.04);border:1px solid rgba(0,200,240,0.1);border-radius:3px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);">HOTTEST REGION</div>
+            <div style="font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:2px;color:var(--accent);margin-top:3px;">${hottest.region.name}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);">SURF THRESHOLD</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text);margin-top:3px;">≥1.2M · ≤18KN · ≥9S PERIOD · OFFSHORE WIND</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-family:'Space Mono',monospace;font-size:9px;color:rgba(138,172,204,0.4);letter-spacing:1px;text-align:center;">
+          Last checked ${new Date().toLocaleTimeString('en-NZ', {hour:'2-digit',minute:'2-digit'})} · Auto-refreshes every 15 minutes
+        </div>
+      `;
+    } else {
+      // Something is firing — electrify the banner
+      statusBanner.style.borderColor = 'rgba(255,0,170,0.4)';
+      statusBanner.style.boxShadow = '0 0 40px rgba(255,0,170,0.15)';
+      document.getElementById('hotRegion').textContent = hottest.region.name.toUpperCase();
+    }
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────
+loadAll();
+
+// Auto-refresh every 15 minutes
+setInterval(loadAll, 15 * 60 * 1000);
+</script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(() => console.log('CoastCheck SW registered'))
+          .catch(err => console.log('SW error:', err));
+      });
+    }
+  </script>
+</body>
+</html>

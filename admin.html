@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoastCheck — Alert Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root{--deep:#060f1c;--ink:#0b1a2e;--foam:#e8f4f8;--accent:#00c8f0;--kelp:#00e080;--sand:#e8c97a;--fire:#ff6600;--epic:#ff00aa;--text:#8aaccc;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--deep);color:var(--foam);font-family:'DM Sans',sans-serif;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(160deg,#060f1c 0%,#0b1a2e 60%,#060f1c 100%);z-index:0;pointer-events:none;}
+
+.container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px 100px;}
+nav{padding:22px 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,200,240,0.1);margin-bottom:40px;flex-wrap:wrap;gap:12px;}
+.nav-brand{font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),var(--kelp));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;}
+.nav-back{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text);text-decoration:none;transition:color 0.2s;}
+.nav-back:hover{color:var(--accent);}
+
+/* SETUP BANNER */
+.setup-banner{background:rgba(255,214,0,0.06);border:1px solid rgba(255,214,0,0.25);border-radius:4px;padding:20px 24px;margin-bottom:32px;}
+.setup-title{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;color:var(--sand);margin-bottom:8px;}
+.setup-body{font-size:13px;color:var(--text);line-height:1.7;}
+.setup-body a{color:var(--accent);text-decoration:none;}
+.setup-body a:hover{text-decoration:underline;}
+.setup-steps{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+.step{display:flex;gap:12px;align-items:flex-start;}
+.step-num{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--fire);line-height:1;flex-shrink:0;width:20px;}
+.step-txt{font-size:13px;color:var(--text);line-height:1.6;}
+
+/* EMAILJS CONFIG */
+.config-section{background:rgba(10,22,40,0.8);border:1px solid rgba(0,200,240,0.15);border-radius:4px;padding:24px;margin-bottom:24px;}
+.section-title{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:3px;color:var(--accent);margin-bottom:4px;}
+.section-sub{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);margin-bottom:18px;}
+
+.field{margin-bottom:14px;}
+.field label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);display:block;margin-bottom:6px;text-transform:uppercase;}
+.field input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(0,200,240,0.2);border-radius:3px;color:var(--foam);font-family:'Space Mono',monospace;font-size:12px;outline:none;transition:border-color 0.3s;}
+.field input:focus{border-color:var(--accent);background:rgba(0,200,240,0.05);}
+.field input::placeholder{color:rgba(138,172,204,0.4);}
+
+.save-btn{padding:11px 24px;background:linear-gradient(135deg,var(--accent),var(--kelp));border:none;border-radius:3px;color:var(--deep);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;font-weight:700;cursor:pointer;transition:all 0.3s;text-transform:uppercase;}
+.save-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,200,240,0.3);}
+.test-btn{padding:11px 24px;background:transparent;border:1px solid rgba(255,102,0,0.4);border-radius:3px;color:var(--fire);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;cursor:pointer;transition:all 0.3s;text-transform:uppercase;margin-left:10px;}
+.test-btn:hover{background:rgba(255,102,0,0.1);}
+
+/* INFLUENCER TABLE */
+.inf-table{width:100%;border-collapse:collapse;margin-top:8px;}
+.inf-table th{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);text-align:left;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.inf-table td{padding:12px 12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;vertical-align:middle;}
+.inf-table tr:hover td{background:rgba(0,200,240,0.03);}
+.region-badge{font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:2px;}
+.email-cell{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);}
+.email-input-cell input{width:100%;padding:7px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(0,200,240,0.15);border-radius:2px;color:var(--foam);font-family:'Space Mono',monospace;font-size:10px;outline:none;transition:border-color 0.3s;}
+.email-input-cell input:focus{border-color:var(--accent);}
+.email-input-cell input::placeholder{color:rgba(138,172,204,0.3);}
+.type-badge{padding:2px 8px;border-radius:2px;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;margin-right:3px;}
+.type-surf{background:rgba(0,200,240,0.1);color:var(--accent);border:1px solid rgba(0,200,240,0.2);}
+.type-fish{background:rgba(232,201,122,0.1);color:var(--sand);border:1px solid rgba(232,201,122,0.2);}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+.dot-active{background:var(--kelp);box-shadow:0 0 6px var(--kelp);}
+.dot-inactive{background:rgba(255,255,255,0.2);}
+
+/* THRESHOLD CONFIG */
+.threshold-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+.thresh-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:3px;padding:14px;}
+.thresh-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);margin-bottom:8px;}
+.thresh-input{display:flex;align-items:center;gap:8px;}
+.thresh-input input{width:70px;padding:6px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(0,200,240,0.15);border-radius:2px;color:var(--foam);font-family:'Space Mono',monospace;font-size:12px;outline:none;text-align:center;}
+.thresh-input input:focus{border-color:var(--accent);}
+.thresh-unit{font-family:'Space Mono',monospace;font-size:9px;color:var(--text);letter-spacing:1px;}
+
+/* LOG */
+.log-box{background:rgba(0,0,0,0.4);border:1px solid rgba(0,200,240,0.1);border-radius:3px;padding:14px;margin-top:16px;max-height:200px;overflow-y:auto;font-family:'Space Mono',monospace;font-size:10px;line-height:2;letter-spacing:1px;}
+.log-entry{color:var(--text);}
+.log-entry.success{color:var(--kelp);}
+.log-entry.error{color:#ff4444;}
+.log-entry.info{color:var(--accent);}
+.log-entry.warn{color:var(--sand);}
+
+/* STATUS */
+.status-msg{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;margin-top:10px;height:16px;}
+.status-msg.ok{color:var(--kelp);}
+.status-msg.err{color:#ff4444;}
+
+@media(max-width:600px){.container{padding:0 16px 80px;}.threshold-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="container">
+  <nav>
+    <a href="/" class="nav-brand">CoastCheck</a>
+    <div style="display:flex;gap:16px;align-items:center;">
+      <a href="/stoke" class="nav-back">⚡ Stoke Meter</a>
+      <a href="/" class="nav-back">← Home</a>
+    </div>
+  </nav>
+
+  <!-- SETUP GUIDE -->
+  <div class="setup-banner">
+    <div class="setup-title">📧 EMAIL ALERT SETUP — ONE TIME ONLY</div>
+    <div class="setup-body">
+      Uses <a href="https://www.emailjs.com" target="_blank">EmailJS</a> — free, no backend needed, 200 emails/month free tier.
+      <div class="setup-steps">
+        <div class="step"><div class="step-num">1</div><div class="step-txt">Go to <a href="https://www.emailjs.com" target="_blank">emailjs.com</a> and create a free account</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-txt">Add an Email Service (Gmail works great) — copy your <strong style="color:var(--foam);">Service ID</strong></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-txt">Create an Email Template using the template below — copy your <strong style="color:var(--foam);">Template ID</strong></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-txt">Go to Account → API Keys — copy your <strong style="color:var(--foam);">Public Key</strong></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-txt">Paste all three below, add influencer emails, hit Save. Done.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMAILJS CONFIG -->
+  <div class="config-section">
+    <div class="section-title">⚙️ EmailJS Config</div>
+    <div class="section-sub">PASTE YOUR EMAILJS CREDENTIALS — SAVED LOCALLY IN YOUR BROWSER</div>
+
+    <div class="field">
+      <label>Public Key</label>
+      <input type="text" id="ejPublicKey" placeholder="e.g. user_aBcDeFgHiJkLmNoPq">
+    </div>
+    <div class="field">
+      <label>Service ID</label>
+      <input type="text" id="ejServiceId" placeholder="e.g. service_xxxxxxx">
+    </div>
+    <div class="field">
+      <label>Template ID</label>
+      <input type="text" id="ejTemplateId" placeholder="e.g. template_xxxxxxx">
+    </div>
+
+    <button class="save-btn" onclick="saveConfig()">💾 SAVE CONFIG</button>
+    <button class="test-btn" onclick="sendTestEmail()">📧 SEND TEST EMAIL</button>
+    <div class="status-msg" id="configStatus"></div>
+  </div>
+
+  <!-- EMAIL TEMPLATE GUIDE -->
+  <div class="config-section">
+    <div class="section-title">📋 Email Template</div>
+    <div class="section-sub">CREATE THIS TEMPLATE IN EMAILJS — COPY EXACTLY</div>
+    <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(0,200,240,0.1);border-radius:3px;padding:16px;font-family:'Space Mono',monospace;font-size:11px;line-height:2;color:var(--text);">
+      <div style="color:var(--accent);margin-bottom:8px;">Subject line:</div>
+      <div style="color:var(--foam);margin-bottom:14px;">⚡ {{region}} IS FIRING — CoastCheck Alert</div>
+      <div style="color:var(--accent);margin-bottom:8px;">Body:</div>
+      <div style="color:var(--foam);">
+        Kia ora {{inf_name}},<br><br>
+        Your region just hit epic conditions on CoastCheck NZ 🔥<br><br>
+        📍 Region: {{region}}<br>
+        🌊 Type: {{alert_type}}<br>
+        💨 Conditions: {{conditions}}<br>
+        ⭐ Stoke Score: {{stoke_score}}/100<br><br>
+        👀 Check it live: {{url}}<br><br>
+        Your stoke alert is live on the Stoke Meter page right now.<br>
+        Share it with your followers while it's firing! 🤙<br><br>
+        — CoastCheck NZ<br>
+        coastcheck.nz
+      </div>
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text);margin-top:10px;letter-spacing:1px;">
+      ⚠ Template variables: {{region}} {{inf_name}} {{alert_type}} {{conditions}} {{stoke_score}} {{url}} {{to_email}}
+    </div>
+  </div>
+
+  <!-- INFLUENCER EMAILS -->
+  <div class="config-section">
+    <div class="section-title">🎯 Influencer Emails</div>
+    <div class="section-sub">ADD EMAIL FOR EACH REGION — LEAVE BLANK TO SKIP THAT REGION</div>
+
+    <table class="inf-table">
+      <thead>
+        <tr>
+          <th>Region</th>
+          <th>TikTok Handle</th>
+          <th>Alert Types</th>
+          <th>Email Address</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="infTableBody"></tbody>
+    </table>
+
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="save-btn" onclick="saveEmails()">💾 SAVE EMAILS</button>
+      <button class="test-btn" onclick="testAllActive()">📧 TEST ALL ACTIVE</button>
+    </div>
+    <div class="status-msg" id="emailStatus"></div>
+  </div>
+
+  <!-- THRESHOLDS -->
+  <div class="config-section">
+    <div class="section-title">🎚️ Alert Thresholds</div>
+    <div class="section-sub">MINIMUM CONDITIONS TO TRIGGER AN EMAIL ALERT</div>
+    <div class="threshold-grid">
+      <div class="thresh-card">
+        <div class="thresh-label">🌊 MIN WAVE HEIGHT</div>
+        <div class="thresh-input">
+          <input type="number" id="threshWave" value="1.2" step="0.1" min="0.5" max="5">
+          <span class="thresh-unit">METRES</span>
+        </div>
+      </div>
+      <div class="thresh-card">
+        <div class="thresh-label">💨 MAX WIND SPEED</div>
+        <div class="thresh-input">
+          <input type="number" id="threshWind" value="18" step="1" min="5" max="40">
+          <span class="thresh-unit">KNOTS</span>
+        </div>
+      </div>
+      <div class="thresh-card">
+        <div class="thresh-label">⏱ MIN WAVE PERIOD</div>
+        <div class="thresh-input">
+          <input type="number" id="threshPeriod" value="9" step="1" min="5" max="20">
+          <span class="thresh-unit">SECONDS</span>
+        </div>
+      </div>
+      <div class="thresh-card">
+        <div class="thresh-label">🎣 MIN STOKE SCORE</div>
+        <div class="thresh-input">
+          <input type="number" id="threshScore" value="70" step="5" min="50" max="95">
+          <span class="thresh-unit">/ 100</span>
+        </div>
+      </div>
+      <div class="thresh-card">
+        <div class="thresh-label">🌙 MIN SOLUNAR</div>
+        <div class="thresh-input">
+          <input type="number" id="threshSolunar" value="3" step="1" min="1" max="5">
+          <span class="thresh-unit">/ 5 STARS</span>
+        </div>
+      </div>
+      <div class="thresh-card">
+        <div class="thresh-label">⏰ ALERT COOLDOWN</div>
+        <div class="thresh-input">
+          <input type="number" id="threshCooldown" value="6" step="1" min="1" max="24">
+          <span class="thresh-unit">HOURS</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <button class="save-btn" onclick="saveThresholds()">💾 SAVE THRESHOLDS</button>
+    </div>
+    <div class="status-msg" id="threshStatus"></div>
+  </div>
+
+  <!-- ALERT LOG -->
+  <div class="config-section">
+    <div class="section-title">📋 Alert Log</div>
+    <div class="section-sub">HISTORY OF EMAILS SENT THIS SESSION</div>
+    <div class="log-box" id="logBox">
+      <div class="log-entry info">— Waiting for conditions to fire...</div>
+    </div>
+    <button class="test-btn" style="margin-top:12px;" onclick="document.getElementById('logBox').innerHTML='<div class=\'log-entry info\'>— Log cleared</div>'">CLEAR LOG</button>
+  </div>
+
+</div>
+
+<script>
+// ── REGION DEFINITIONS (match stoke.html) ─────────────
+const REGIONS = [
+  { name:'Northland',    handle:'@whangareisurf',  types:['surf','fish'], emoji:'🌿' },
+  { name:'Auckland',     handle:'@westcoastnz',    types:['surf','fish'], emoji:'🌆' },
+  { name:'Coromandel',   handle:'@coromandelsurf', types:['surf','fish'], emoji:'🌴' },
+  { name:'Bay of Plenty',handle:'@mountsurfnz',    types:['surf','fish'], emoji:'🏔️' },
+  { name:'East Cape',    handle:'@gizzysurfnz',    types:['surf','fish'], emoji:'🌅' },
+  { name:'Wellington',   handle:'@wellysurf',      types:['surf','fish'], emoji:'💨' },
+];
+
+// ── STORAGE HELPERS ───────────────────────────────────
+const store = {
+  get: k => { try { return JSON.parse(localStorage.getItem('cc_' + k)); } catch(e) { return null; } },
+  set: (k,v) => localStorage.setItem('cc_' + k, JSON.stringify(v)),
+};
+
+// ── LOAD SAVED VALUES ─────────────────────────────────
+function loadSaved() {
+  const cfg = store.get('ejConfig') || {};
+  if (cfg.publicKey)  document.getElementById('ejPublicKey').value  = cfg.publicKey;
+  if (cfg.serviceId)  document.getElementById('ejServiceId').value  = cfg.serviceId;
+  if (cfg.templateId) document.getElementById('ejTemplateId').value = cfg.templateId;
+
+  const thresh = store.get('thresholds') || {};
+  if (thresh.wave)     document.getElementById('threshWave').value     = thresh.wave;
+  if (thresh.wind)     document.getElementById('threshWind').value     = thresh.wind;
+  if (thresh.period)   document.getElementById('threshPeriod').value   = thresh.period;
+  if (thresh.score)    document.getElementById('threshScore').value    = thresh.score;
+  if (thresh.solunar)  document.getElementById('threshSolunar').value  = thresh.solunar;
+  if (thresh.cooldown) document.getElementById('threshCooldown').value = thresh.cooldown;
+
+  buildTable();
+}
+
+// ── BUILD INFLUENCER TABLE ────────────────────────────
+function buildTable() {
+  const emails = store.get('infEmails') || {};
+  const tbody = document.getElementById('infTableBody');
+  tbody.innerHTML = REGIONS.map(r => {
+    const saved = emails[r.name] || '';
+    const hasEmail = !!saved;
+    return `
+      <tr>
+        <td><span class="region-badge">${r.emoji} ${r.name}</span></td>
+        <td><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text);">${r.handle}</span></td>
+        <td>
+          ${r.types.includes('surf') ? '<span class="type-badge type-surf">SURF</span>' : ''}
+          ${r.types.includes('fish') ? '<span class="type-badge type-fish">FISH</span>' : ''}
+        </td>
+        <td class="email-input-cell">
+          <input type="email" id="email-${r.name}" value="${saved}" placeholder="influencer@email.com">
+        </td>
+        <td>
+          <span class="status-dot ${hasEmail ? 'dot-active' : 'dot-inactive'}"></span>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;color:${hasEmail ? 'var(--kelp)' : 'var(--text)'};">
+            ${hasEmail ? 'ACTIVE' : 'NO EMAIL'}
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ── SAVE FUNCTIONS ────────────────────────────────────
+function saveConfig() {
+  const cfg = {
+    publicKey:  document.getElementById('ejPublicKey').value.trim(),
+    serviceId:  document.getElementById('ejServiceId').value.trim(),
+    templateId: document.getElementById('ejTemplateId').value.trim(),
+  };
+  if (!cfg.publicKey || !cfg.serviceId || !cfg.templateId) {
+    showStatus('configStatus', '✗ Fill in all three fields', 'err'); return;
+  }
+  store.set('ejConfig', cfg);
+  emailjs.init(cfg.publicKey);
+  showStatus('configStatus', '✓ Config saved', 'ok');
+  log('EmailJS config saved', 'success');
+}
+
+function saveEmails() {
+  const emails = {};
+  REGIONS.forEach(r => {
+    const val = document.getElementById(`email-${r.name}`)?.value.trim();
+    if (val) emails[r.name] = val;
+  });
+  store.set('infEmails', emails);
+  buildTable();
+  showStatus('emailStatus', `✓ ${Object.keys(emails).length} email(s) saved`, 'ok');
+  log(`Saved emails for: ${Object.keys(emails).join(', ') || 'none'}`, 'success');
+}
+
+function saveThresholds() {
+  const thresh = {
+    wave:     parseFloat(document.getElementById('threshWave').value),
+    wind:     parseFloat(document.getElementById('threshWind').value),
+    period:   parseFloat(document.getElementById('threshPeriod').value),
+    score:    parseFloat(document.getElementById('threshScore').value),
+    solunar:  parseFloat(document.getElementById('threshSolunar').value),
+    cooldown: parseFloat(document.getElementById('threshCooldown').value),
+  };
+  store.set('thresholds', thresh);
+  showStatus('threshStatus', '✓ Thresholds saved', 'ok');
+  log('Thresholds updated', 'success');
+}
+
+// ── SEND EMAIL ────────────────────────────────────────
+async function sendAlert({ toEmail, infName, region, alertType, conditions, stokeScore }) {
+  const cfg = store.get('ejConfig');
+  if (!cfg?.publicKey) { log('EmailJS not configured', 'error'); return false; }
+
+  // Check cooldown
+  const cooldownHrs = store.get('thresholds')?.cooldown ?? 6;
+  const lastSent = store.get(`lastAlert_${region}`) || 0;
+  const hoursSince = (Date.now() - lastSent) / 3600000;
+  if (hoursSince < cooldownHrs) {
+    log(`⏰ ${region} cooldown active (${cooldownHrs - hoursSince.toFixed(1)}hrs remaining)`, 'warn');
+    return false;
+  }
+
+  try {
+    emailjs.init(cfg.publicKey);
+    await emailjs.send(cfg.serviceId, cfg.templateId, {
+      to_email:   toEmail,
+      inf_name:   infName,
+      region:     region,
+      alert_type: alertType,
+      conditions: conditions,
+      stoke_score: stokeScore,
+      url:        'https://coastcheck.nz/stoke.html',
+    });
+
+    store.set(`lastAlert_${region}`, Date.now());
+    log(`✓ Email sent → ${toEmail} (${region} ${alertType})`, 'success');
+    return true;
+  } catch(e) {
+    log(`✗ Email failed → ${region}: ${e.text || e.message}`, 'error');
+    return false;
+  }
+}
+
+// ── TEST FUNCTIONS ────────────────────────────────────
+async function sendTestEmail() {
+  const cfg = store.get('ejConfig');
+  if (!cfg?.publicKey) { showStatus('configStatus', '✗ Save config first', 'err'); return; }
+
+  const emails = store.get('infEmails') || {};
+  const firstEmail = Object.values(emails)[0];
+  if (!firstEmail) { showStatus('configStatus', '✗ Add at least one email first', 'err'); return; }
+
+  showStatus('configStatus', '📧 Sending test...', 'ok');
+  const ok = await sendAlert({
+    toEmail:    firstEmail,
+    infName:    'Test Influencer',
+    region:     'TEST REGION',
+    alertType:  'TEST ALERT — CoastCheck is working!',
+    conditions: '🌊 2.1m @ 12s · 💨 8kn · 🌙 Solunar 4/5',
+    stokeScore: 87,
+  });
+  showStatus('configStatus', ok ? '✓ Test email sent! Check inbox' : '✗ Failed — check console', ok ? 'ok' : 'err');
+}
+
+async function testAllActive() {
+  const emails = store.get('infEmails') || {};
+  let sent = 0;
+  for (const [region, email] of Object.entries(emails)) {
+    const r = REGIONS.find(r => r.name === region);
+    await sendAlert({
+      toEmail:    email,
+      infName:    r?.handle ?? region,
+      region:     region,
+      alertType:  'TEST ALERT — CoastCheck is working!',
+      conditions: '🌊 2.1m @ 12s · 💨 8kn',
+      stokeScore: 85,
+    });
+    sent++;
+    await new Promise(r => setTimeout(r, 800)); // space them out
+  }
+  showStatus('emailStatus', `✓ ${sent} test email(s) sent`, 'ok');
+}
+
+// ── PUBLIC API (called from stoke.html) ───────────────
+// stoke.html calls window.coastcheckAlerts.fire(data) when conditions are epic
+window.coastcheckAlerts = {
+  async fire({ region, alertType, conditions, stokeScore }) {
+    const emails = store.get('infEmails') || {};
+    const email = emails[region];
+    if (!email) return;
+    const r = REGIONS.find(r => r.name === region);
+    await sendAlert({
+      toEmail: email,
+      infName: r?.handle ?? region,
+      region, alertType, conditions, stokeScore
+    });
+  },
+  getThresholds() {
+    return store.get('thresholds') || {
+      wave:1.2, wind:18, period:9, score:70, solunar:3, cooldown:6
+    };
+  },
+  getEmails() {
+    return store.get('infEmails') || {};
+  }
+};
+
+// ── HELPERS ───────────────────────────────────────────
+function showStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status-msg ' + type;
+  setTimeout(() => el.textContent = '', 4000);
+}
+
+function log(msg, type = 'info') {
+  const box = document.getElementById('logBox');
+  const t = new Date();
+  const ts = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+  const el = document.createElement('div');
+  el.className = `log-entry ${type}`;
+  el.textContent = `[${ts}] ${msg}`;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+// ── INIT ──────────────────────────────────────────────
+loadSaved();
+
+const cfg = store.get('ejConfig');
+if (cfg?.publicKey) {
+  emailjs.init(cfg.publicKey);
+  log('EmailJS initialised from saved config', 'info');
+} else {
+  log('⚠ EmailJS not configured — fill in credentials above', 'warn');
+}
+</script>
+</body>
+</html>
