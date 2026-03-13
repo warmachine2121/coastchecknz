@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="google-site-verification" content="YvKTbho_ni7Fc1R0KxdgaR1daS37XalhcagQsk60jdA" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoastCheck NZ — Live Surf & Boating Conditions North Island</title>
+<meta name="description" content="Free live surf, boating and fishing conditions for 40+ North Island NZ beaches and harbours. No ads, no paywall.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --deep:#060f1c; --ink:#0b1a2e; --foam:#e8f4f8;
+  --accent:#00c8f0; --kelp:#00e080; --sand:#e8c97a;
+  --red:#ff4455; --orange:#ff8c00; --yellow:#ffd600; --text:#8aaccc;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--deep);color:var(--foam);font-family:'DM Sans',sans-serif;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 100% 60% at 10% 100%,rgba(0,100,180,0.3) 0%,transparent 55%),linear-gradient(160deg,#060f1c 0%,#0b1a2e 50%,#060f1c 100%);z-index:0;pointer-events:none;}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:0 40px;}
+.horizon{position:absolute;bottom:0;left:0;right:0;height:200px;overflow:hidden;}
+.hw{position:absolute;bottom:0;width:200%;height:60px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 60'%3E%3Cpath d='M0,30 C300,60 600,0 900,30 C1050,45 1150,15 1200,30 L1200,60 L0,60 Z' fill='%2300c8f0'/%3E%3C/svg%3E") repeat-x;background-size:600px 60px;opacity:0.07;}
+.hw:nth-child(1){animation:wv 10s linear infinite;}
+.hw:nth-child(2){animation:wv 16s linear infinite reverse;bottom:15px;opacity:0.04;}
+@keyframes wv{to{transform:translateX(-50%);}}
+.hero-inner{position:relative;z-index:2;max-width:1100px;margin:0 auto;width:100%;padding:120px 0 80px;}
+.eyebrow{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.eyebrow::before{content:'';display:block;width:40px;height:1px;background:var(--accent);}
+.hero-title{font-family:'Bebas Neue',cursive;font-size:clamp(72px,12vw,160px);line-height:0.9;letter-spacing:-2px;margin-bottom:8px;}
+.hero-title .l1{display:block;background:linear-gradient(135deg,#fff 0%,#a0d4f0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-title .l2{display:block;background:linear-gradient(135deg,#00c8f0 0%,#00e080 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:clamp(16px,2vw,22px);color:var(--text);margin-top:16px;max-width:500px;line-height:1.6;}
+.hero-stats{display:flex;gap:40px;margin-top:40px;flex-wrap:wrap;}
+.stat-num{font-family:'Bebas Neue',cursive;font-size:42px;color:var(--accent);letter-spacing:2px;line-height:1;}
+.stat-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text);text-transform:uppercase;margin-top:2px;}
+.hero-cta{margin-top:40px;display:flex;gap:14px;flex-wrap:wrap;}
+.btn-p{padding:14px 30px;background:var(--accent);color:var(--deep);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;text-decoration:none;border-radius:2px;font-weight:700;transition:all 0.3s;cursor:pointer;border:none;}
+.btn-p:hover{background:#fff;transform:translateY(-2px);}
+.scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text);animation:bob 2s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+.scroll-line{width:1px;height:36px;background:linear-gradient(to bottom,var(--accent),transparent);}
+
+/* MAIN */
+.main{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:70px 24px 100px;}
+
+/* CONTROLS */
+.search-wrap{position:relative;margin-bottom:16px;}
+.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text);font-size:16px;pointer-events:none;}
+#searchInput{width:100%;padding:14px 14px 14px 46px;background:rgba(255,255,255,0.04);border:1px solid rgba(0,200,240,0.2);border-radius:3px;color:var(--foam);font-family:'DM Sans',sans-serif;font-size:16px;outline:none;transition:border-color 0.3s;}
+#searchInput:focus{border-color:var(--accent);background:rgba(0,200,240,0.05);}
+#searchInput::placeholder{color:var(--text);}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:40px;}
+.filter-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text);}
+.fbtn{padding:7px 14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;border-radius:2px;transition:all 0.2s;}
+.fbtn:hover{border-color:var(--accent);color:var(--accent);}
+.fbtn.active{background:rgba(0,200,240,0.12);border-color:var(--accent);color:var(--accent);}
+
+/* REGION */
+.region-section{margin-bottom:56px;}
+.region-header{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.region-name{font-family:'Bebas Neue',cursive;font-size:34px;letter-spacing:3px;}
+.region-count{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text);}
+
+/* CARDS */
+.spots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;}
+.spot-card{background:rgba(15,28,50,0.7);border:1px solid rgba(255,255,255,0.06);border-radius:4px;padding:20px;cursor:pointer;text-decoration:none;color:inherit;display:block;transition:all 0.25s;position:relative;overflow:hidden;}
+.spot-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--kelp));transform:scaleX(0);transform-origin:left;transition:transform 0.3s;}
+.spot-card:hover{border-color:rgba(0,200,240,0.3);transform:translateY(-3px);background:rgba(0,200,240,0.05);}
+.spot-card:hover::before{transform:scaleX(1);}
+.spot-card.has-node{border-color:rgba(0,224,128,0.2);}
+.node-badge{position:absolute;top:12px;right:12px;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--kelp);background:rgba(0,224,128,0.1);border:1px solid rgba(0,224,128,0.3);padding:2px 7px;border-radius:2px;}
+.spot-coast{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);margin-bottom:6px;}
+.spot-name{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:2px;margin-bottom:6px;line-height:1;}
+.spot-desc{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:12px;}
+.spot-types{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.ttag{padding:3px 9px;border-radius:2px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;}
+.tag-surf{background:rgba(0,200,240,0.1);color:var(--accent);border:1px solid rgba(0,200,240,0.2);}
+.tag-boating{background:rgba(0,224,128,0.1);color:var(--kelp);border:1px solid rgba(0,224,128,0.2);}
+.tag-fishing{background:rgba(232,201,122,0.1);color:var(--sand);border:1px solid rgba(232,201,122,0.2);}
+.tag-swim{background:rgba(180,160,255,0.1);color:#b4a0ff;border:1px solid rgba(180,160,255,0.2);}
+.spot-cond{border-top:1px solid rgba(255,255,255,0.05);padding-top:10px;display:flex;gap:10px;align-items:center;min-height:26px;flex-wrap:wrap;}
+.cond-loading{font-family:'Space Mono',monospace;font-size:9px;color:var(--text);letter-spacing:1px;animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.cond-w{font-family:'Space Mono',monospace;font-size:10px;color:var(--foam);}
+.cond-wv{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);}
+.cpill{padding:2px 8px;border-radius:2px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;margin-left:auto;}
+.pill-good{background:rgba(0,255,136,0.15);color:#00ff88;}
+.pill-fair{background:rgba(255,214,0,0.15);color:#ffd600;}
+.pill-poor{background:rgba(255,140,0,0.15);color:#ff8c00;}
+.pill-danger{background:rgba(255,68,68,0.15);color:#ff4444;}
+.spot-arrow{position:absolute;bottom:18px;right:18px;font-size:14px;color:var(--text);transition:all 0.2s;}
+.spot-card:hover .spot-arrow{color:var(--accent);transform:translate(2px,-2px);}
+.no-results{text-align:center;padding:60px;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--text);display:none;}
+
+/* FOOTER */
+footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,0.06);padding:36px 40px;max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.footer-brand{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;background:linear-gradient(135deg,var(--accent),var(--kelp));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.footer-text{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);line-height:1.8;margin-top:4px;}
+.donate-btn{display:flex;align-items:center;gap:10px;padding:10px 18px;background:rgba(255,102,0,0.1);border:1px solid rgba(255,102,0,0.4);border-radius:3px;color:#ff9040;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;transition:all 0.3s;}
+.donate-btn:hover{background:rgba(255,102,0,0.2);transform:translateY(-1px);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--ink);border:1px solid rgba(255,102,0,0.3);border-radius:6px;padding:32px;max-width:500px;width:90%;position:relative;}
+.modal-title{font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:3px;color:#ff9040;margin-bottom:6px;}
+.modal-sub{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text);margin-bottom:20px;}
+.xmr-addr{background:rgba(0,0,0,0.4);border:1px solid rgba(255,102,0,0.3);border-radius:3px;padding:14px;font-family:'Space Mono',monospace;font-size:10px;color:#ff9040;word-break:break-all;letter-spacing:1px;line-height:1.7;cursor:pointer;}
+.copy-hint{font-family:'Space Mono',monospace;font-size:9px;color:var(--text);letter-spacing:1px;margin-top:8px;text-align:center;}
+.copy-ok{color:#00ff88;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-align:center;margin-top:8px;height:16px;}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;}
+.modal-close:hover{color:var(--foam);}
+.modal-note{margin-top:18px;font-size:13px;color:var(--text);line-height:1.6;border-top:1px solid rgba(255,102,0,0.15);padding-top:14px;}
+
+
+/* ── ELECTRIFY ── */
+.spot-card.elec-surf {
+  border-color:rgba(255,0,170,0.5) !important;
+  box-shadow:0 0 24px rgba(255,0,170,0.2),0 0 48px rgba(255,0,170,0.1),inset 0 0 24px rgba(255,0,170,0.04);
+  animation:epulse 2s ease-in-out infinite;
+}
+.spot-card.elec-fish {
+  border-color:rgba(232,201,122,0.7) !important;
+  background:linear-gradient(135deg,rgba(232,201,122,0.06) 0%,rgba(10,15,26,0) 60%) !important;
+  box-shadow:0 0 30px rgba(232,201,122,0.35),0 0 60px rgba(232,201,122,0.15),inset 0 0 30px rgba(232,201,122,0.06);
+  animation:fpulse 2.5s ease-in-out infinite;
+}
+.spot-card.elec-surf.elec-fish {
+  border-color:rgba(255,102,0,0.6) !important;
+  box-shadow:0 0 32px rgba(255,102,0,0.3),0 0 64px rgba(255,102,0,0.15),inset 0 0 32px rgba(255,102,0,0.06);
+  animation:dpulse 1.5s ease-in-out infinite;
+}
+@keyframes epulse{0%,100%{box-shadow:0 0 24px rgba(255,0,170,0.2),0 0 48px rgba(255,0,170,0.1);}50%{box-shadow:0 0 40px rgba(255,0,170,0.4),0 0 80px rgba(255,0,170,0.2);}}
+@keyframes fpulse{0%,100%{box-shadow:0 0 30px rgba(232,201,122,0.25),0 0 60px rgba(232,201,122,0.1);}50%{box-shadow:0 0 55px rgba(232,201,122,0.55),0 0 110px rgba(232,201,122,0.25),0 0 160px rgba(232,201,122,0.1);}}
+@keyframes dpulse{0%,100%{box-shadow:0 0 32px rgba(255,102,0,0.3),0 0 64px rgba(255,102,0,0.15);}50%{box-shadow:0 0 60px rgba(255,102,0,0.5),0 0 120px rgba(255,102,0,0.3);}}
+
+.spot-card.elec-surf::before { background:linear-gradient(90deg,transparent,#ff00aa,#00c8f0,#ff00aa,transparent) !important; animation:escan 1s linear infinite !important; transform:scaleX(1) !important; height:3px !important; }
+.spot-card.elec-fish::before { background:linear-gradient(90deg,transparent,var(--sand),#ff6600,var(--sand),transparent) !important; animation:escan 1.2s linear infinite !important; transform:scaleX(1) !important; height:3px !important; }
+@keyframes escan{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
+
+.spot-card.elec-surf::after,.spot-card.elec-fish::after {
+  content:'⚡'; position:absolute; top:10px; right:36px;
+  font-size:14px; animation:ezap 0.8s ease-in-out infinite alternate;
+}
+.spot-card.elec-fish::after { content:'🎣'; }
+.spot-card.elec-surf.elec-fish::after { content:'💥'; }
+@keyframes ezap{0%{opacity:1;transform:scale(1);}100%{opacity:0.5;transform:scale(1.3);}}
+
+.elec-badge {
+  display:inline-block;padding:2px 8px;border-radius:2px;
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;
+  margin-left:6px;vertical-align:middle;
+  animation:ezap 1s ease-in-out infinite alternate;
+}
+.elec-badge-surf{background:rgba(255,0,170,0.15);color:#ff00aa;border:1px solid rgba(255,0,170,0.4);}
+.elec-badge-fish{background:rgba(232,201,122,0.15);color:var(--sand);border:1px solid rgba(232,201,122,0.4);}
+
+/* STOKE METER LINK */
+.stoke-link {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 22px;
+  background:rgba(255,0,170,0.06);
+  border:1px solid rgba(255,0,170,0.25);
+  border-radius:4px;margin-bottom:36px;
+  text-decoration:none;color:inherit;
+  transition:all 0.3s;position:relative;overflow:hidden;
+}
+.stoke-link:hover{background:rgba(255,0,170,0.12);border-color:rgba(255,0,170,0.5);}
+.stoke-link::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ff00aa,#ff6600,#ff00aa,transparent);animation:escan 2s linear infinite;}
+.stoke-link-left{display:flex;align-items:center;gap:14px;}
+.stoke-link-icon{font-size:28px;animation:ezap 1.5s ease-in-out infinite alternate;}
+.stoke-link-title{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:3px;background:linear-gradient(135deg,#ff6600,#ff00aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stoke-link-sub{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text);margin-top:2px;}
+.stoke-link-arrow{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:2px;color:#ff00aa;}
+
+@media(max-width:600px){.hero{padding:0 20px;}.main{padding:50px 16px 80px;}footer{padding:28px 20px;}}
+</style>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0f1a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CoastCheck">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+</head>
+<body>
+
+<section class="hero">
+  <div class="horizon"><div class="hw"></div><div class="hw"></div></div>
+  <div class="hero-inner">
+    <div class="eyebrow">Free · No Ads · Real Data</div>
+    <h1 class="hero-title">
+      <span class="l1">Coast</span>
+      <span class="l2">Check</span>
+    </h1>
+    <p class="hero-sub">Live surf, boating & fishing conditions for the NZ North Island. Built by locals, for locals.</p>
+    <div class="hero-stats">
+      <div><div class="stat-num" id="spotCount">41</div><div class="stat-lbl">Spots & Harbours</div></div>
+      <div><div class="stat-num">24H</div><div class="stat-lbl">Forecast Window</div></div>
+      <div><div class="stat-num">$0</div><div class="stat-lbl">Cost to Use</div></div>
+      <div><div class="stat-num">0</div><div class="stat-lbl">Ads Ever</div></div>
+    </div>
+    <div class="hero-cta">
+      <button class="btn-p" onclick="document.getElementById('spots').scrollIntoView({behavior:'smooth'})">Check Conditions ↓</button>
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div>SCROLL</div>
+</section>
+
+<main class="main" id="spots">
+  <a class="stoke-link" href="/stoke">
+    <div class="stoke-link-left">
+      <div class="stoke-link-icon">⚡</div>
+      <div>
+        <div class="stoke-link-title">STOKE METER</div>
+        <div class="stoke-link-sub">LIVE EPIC ALERTS — SURF & FISHING — WHEN IT FIRES YOU'LL KNOW</div>
+      </div>
+    </div>
+    <div class="stoke-link-arrow">→</div>
+  </a>
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="searchInput" placeholder="Search beaches, harbours, regions...">
+  </div>
+  <div class="filter-row">
+    <span class="filter-lbl">FILTER:</span>
+    <button class="fbtn active" data-f="all">All</button>
+    <button class="fbtn" data-f="surf">🏄 Surf</button>
+    <button class="fbtn" data-f="boating">⛵ Boating</button>
+    <button class="fbtn" data-f="fishing">🎣 Fishing</button>
+    <button class="fbtn" data-f="swim">🏊 Swim</button>
+    <button class="fbtn" data-f="node">📡 Local Node</button>
+  </div>
+  <div class="no-results" id="noResults">No spots match your search.</div>
+  <div id="regionsContainer"></div>
+</main>
+
+<footer>
+  <div>
+    <div class="footer-brand">CoastCheck NZ</div>
+    <div class="footer-text">FREE FOREVER · NO ADS · NO PAYWALL<br>DATA: ECMWF + NOAA · VALID 24HRS ONLY<br>ALWAYS VERIFY WITH METSERVICE BEFORE DEPARTING</div>
+  </div>
+  <button class="donate-btn" onclick="document.getElementById('xmrModal').classList.add('open')">
+    <span style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#ff6600,#ff9040);display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:bold;">X</span>
+    DONATE XMR
+  </button>
+</footer>
+
+<div class="modal-overlay" id="xmrModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('xmrModal').classList.remove('open')">✕</button>
+    <div class="modal-title">SUPPORT COASTCHECK</div>
+    <div class="modal-sub">MONERO XMR — PRIVATE · DECENTRALISED</div>
+    <div class="xmr-addr" id="xmrAddrIdx" onclick="copyXMR('xmrAddrIdx','copyOkIdx')">48Ji9CKsNvVSHSHA2rMX3gZf87PPoxftgBqecGoCERUqFQCTthP5Uo2drpxLHH9xW1aYid2c1p5NqUQzY13icJhE2cg5F4</div>
+    <div class="copy-hint">↑ CLICK TO COPY</div>
+    <div class="copy-ok" id="copyOkIdx"></div>
+    <div class="modal-note">CoastCheck is free, ad-free, and built on open public data. If it's kept you safe on the water, a small XMR donation keeps the lights on. Cheers 🤙</div>
+  </div>
+</div>
+
+<script>
+// ── LOCATIONS DATA (baked in) ──────────────────────────
+const LOCATIONS = [{"id":"mangawhai","name":"Mangawhai Heads","region":"Northland","lat":-36.13,"lon":174.59,"coast":"East Coast","types":["surf","boating","fishing"],"description":"Beach break with left point at the rivermouth — lefts and rights on NE swell, offshore in westerlies. The bar can get fast and hollow on bigger sets. Consistent east coast spot with regular dolphin visitors. Sharks present — locals aware.","local_node":true,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12},"offshoreDir":270},{"id":"te-arai","name":"Te Arai Point","region":"Northland","lat":-36.35,"lon":174.67,"coast":"East Coast","types":["surf","fishing"],"description":"Exposed right-hand point break south of Mangawhai. Long walls on NE swell, offshore in westerlies. About an hour from Auckland — worth the drive to avoid the bigger lineups. Uncrowded and raw with a real nature reserve feel.","local_node":false,"offshoreDir":270,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"port-albert","name":"Port Albert","region":"Northland","lat":-36.37,"lon":174.46,"coast":"Kaipara Harbour","types":["boating","fishing"],"description":"Historic Kaipara Harbour settlement. Tidal estuary \u2014 check tides before entering.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"whangarei-heads","name":"Whangarei Heads","region":"Northland","lat":-35.83,"lon":174.58,"coast":"East Coast","types":["surf","boating","fishing"],"description":"Sheltered anchorage with access to outer coast surf spots.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"matapouri","name":"Matapouri","region":"Northland","lat":-35.54,"lon":174.55,"coast":"East Coast","types":["surf","swim"],"description":"Crystal clear water, consistent beach break. One of Northland's best kept secrets.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"shipwreck-bay","name":"Shipwreck Bay","region":"Northland","lat":-35.17,"lon":173.24,"coast":"West Coast","types":["surf"],"description":"Jewel of the Northland region — a series of left-handers drawing power straight from the Tasman Sea. Main break is mellow and cruisy for longboarders but can go big and fast. The secondary break Peaks is steeper with hollow drop-ins and barrelling sections. Early bird catches the worm here — dawn sessions are gold.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12},"offshoreDir":180},{"id":"ahipara","name":"Ahipara","region":"Northland","lat":-35.17,"lon":173.16,"coast":"West Coast","types":["surf","fishing"],"description":"South end of 90 Mile Beach. Lefts and rights on NW swell, offshore in SSE winds. Long rolling waves, very consistent. Remote and uncrowded with a raw Northland feel. Good fishing too — one of the region's most underrated spots.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12},"offshoreDir":155},{"id":"ruakaka","name":"Ruakaka","region":"Northland","lat":-35.91,"lon":174.46,"coast":"East Coast","types":["surf","boating","fishing"],"description":"Consistent beach break near Whangarei. Good fishing grounds offshore.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"orewa","name":"Orewa","region":"Auckland","lat":-36.59,"lon":174.69,"coast":"East Coast","types":["surf","swim"],"description":"Long sandy beach north of Auckland. Patrolled in summer. Fun beach break.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":18,"minPeriod":8},"fishThreshold":{"maxWind":10}},{"id":"long-bay","name":"Long Bay","region":"Auckland","lat":-36.68,"lon":174.74,"coast":"Hauraki Gulf","types":["swim","boating"],"description":"Popular Auckland family beach. Sheltered from southerlies.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":18,"minPeriod":8},"fishThreshold":{"maxWind":10}},{"id":"takapuna","name":"Takapuna","region":"Auckland","lat":-36.79,"lon":174.77,"coast":"Hauraki Gulf","types":["surf","swim"],"description":"Consistent shore break. Best on NE swell with light SW winds.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":18,"minPeriod":8},"fishThreshold":{"maxWind":10}},{"id":"piha","name":"Piha","region":"Auckland","lat":-36.95,"lon":174.46,"coast":"West Coast","types":["surf"],"description":"Iconic black sand beach break cut off from Auckland by the Waitakere Ranges — a breathtaking setting beneath raw Tasman coast. Lion Rock splits the bay into two distinct peaks. South Piha more accessible and popular. North Piha a Southern Ocean swell magnet that's often working when it's flat elsewhere. Powerful rips — respect the water. Patrolled. Gets busy on weekends.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":18,"minPeriod":8},"fishThreshold":{"maxWind":10},"offshoreDir":90},{"id":"muriwai","name":"Muriwai","region":"Auckland","lat":-36.83,"lon":174.44,"coast":"West Coast","types":["surf","fishing"],"description":"Long exposed west coast beach break magnetising westerly and south-westerly Tasman swell. Lefts and rights, consistent and powerful. Gannet colony on the cliffs adds to the spectacle. Shore dump can be serious — experienced surfers. Good fishing off the rocks too.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":18,"minPeriod":8},"fishThreshold":{"maxWind":10},"offshoreDir":90},{"id":"karekare","name":"Karekare","region":"Auckland","lat":-36.99,"lon":174.45,"coast":"West Coast","types":["surf"],"description":"Remote and powerful west coast beach break — no lifeguards, no crowds, no nonsense. Lefts and rights on SW swell, offshore in easterlies. Surrounded by Waitakere Ranges bush. One of Auckland's most raw and unspoiled breaks. Experienced surfers only.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":18,"minPeriod":8},"fishThreshold":{"maxWind":10},"offshoreDir":90},{"id":"north-shore","name":"North Shore / Gulf","region":"Auckland","lat":-36.8,"lon":174.79,"coast":"Hauraki Gulf","types":["boating","fishing"],"description":"Hauraki Gulf boating hub. Check for ferry traffic and wind funnelling.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":18,"minPeriod":8},"fishThreshold":{"maxWind":10}},{"id":"waiheke","name":"Waiheke Island","region":"Auckland","lat":-36.79,"lon":175.09,"coast":"Hauraki Gulf","types":["boating","fishing","swim"],"description":"Sheltered bays on south side. Watch for ferry wakes and gulf chop.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":18,"minPeriod":8},"fishThreshold":{"maxWind":10}},{"id":"coromandel-town","name":"Coromandel Town","region":"Coromandel","lat":-36.76,"lon":175.5,"coast":"Firth of Thames","types":["boating","fishing"],"description":"Historic harbour town. Good anchorage, popular fishing grounds.","local_node":false,"surfThreshold":{"minWave":0.8,"maxWind":14,"minPeriod":8},"fishThreshold":{"maxWind":10}},{"id":"whitianga","name":"Whitianga","region":"Coromandel","lat":-36.83,"lon":175.69,"coast":"Mercury Bay","types":["boating","fishing","surf"],"description":"Mercury Bay \u2014 one of NZ's best boating destinations. Good deep sea fishing.","local_node":false,"surfThreshold":{"minWave":0.8,"maxWind":14,"minPeriod":8},"fishThreshold":{"maxWind":10}},{"id":"hahei","name":"Hahei","region":"Coromandel","lat":-36.87,"lon":175.78,"coast":"East Coast","types":["surf","swim","boating"],"description":"Beach break near Cathedral Cove. Lefts and rights on NE swell, offshore in westerlies. Sheltered on W winds, fun and relatively mellow. Good for all levels.","local_node":false,"surfThreshold":{"minWave":0.8,"maxWind":14,"minPeriod":8},"fishThreshold":{"maxWind":10},"offshoreDir":270},{"id":"whangamata","name":"Whangamata","region":"Coromandel","lat":-37.2,"lon":175.87,"coast":"East Coast","types":["surf","boating","fishing"],"description":"Classic Coromandel surf town. Beach break lefts and rights on NE swell, offshore in SW winds. Bar can be punchy on bigger days. Good bar fishing too.","local_node":false,"surfThreshold":{"minWave":0.8,"maxWind":14,"minPeriod":8},"fishThreshold":{"maxWind":10},"offshoreDir":225},{"id":"tairua","name":"Tairua","region":"Coromandel","lat":-37.0,"lon":175.85,"coast":"East Coast","types":["surf","boating","fishing"],"description":"Harbour and ocean beach. Good boating in the harbour, surf on the bar.","local_node":false,"surfThreshold":{"minWave":0.8,"maxWind":14,"minPeriod":8},"fishThreshold":{"maxWind":10}},{"id":"new-plymouth","name":"New Plymouth","region":"Taranaki","lat":-39.06,"lon":174.08,"coast":"West Coast","types":["surf","boating","fishing"],"description":"City surf break with backdrop of Mt Taranaki. Beach break picks up most SW swell.","local_node":false,"offshoreDir":90,"surfThreshold":{"minWave":1.0,"maxWind":16,"minPeriod":8},"fishThreshold":{"maxWind":14}},{"id":"back-beach","name":"Back Beach","region":"Taranaki","lat":-39.05,"lon":174.01,"coast":"West Coast","types":["surf"],"description":"Black sand beach break on the west end of New Plymouth. Three main peaks with lefts, rights and A-frames. Powerful and punchy \u2014 best at chest to head high. Handles a range of wind directions (SE to NE). Constantly shifting sandbars. Most swell-exposed spot in Taranaki.","local_node":false,"offshoreDir":90,"surfThreshold":{"minWave":1.0,"maxWind":16,"minPeriod":8},"fishThreshold":{"maxWind":14}},{"id":"bell-block-reef","name":"Bell Block Reef","region":"Taranaki","lat":-39.02,"lon":174.1,"coast":"West Coast","types":["surf"],"description":"Offshore left hand reef break about 8km north of New Plymouth. WSW swell + SE offshore winds = heavy hollow left. Long paddle out, breaks in shallow water over boulders. Experts and chargers only \u2014 sharky, rarely crowded. Best at low tide in winter.","local_node":false,"offshoreDir":135,"surfThreshold":{"minWave":1.5,"maxWind":16,"minPeriod":9},"fishThreshold":{"maxWind":14}},{"id":"fitzroy","name":"Fitzroy Beach","region":"Taranaki","lat":-39.04,"lon":174.1,"coast":"West Coast","types":["surf","swim"],"description":"Popular patrolled beach in New Plymouth. Consistent beach break, good for all levels.","local_node":false,"offshoreDir":90,"surfThreshold":{"minWave":1.0,"maxWind":16,"minPeriod":8},"fishThreshold":{"maxWind":14}},{"id":"the-groyne","name":"The Groyne","region":"Taranaki","lat":-39.045,"lon":174.115,"coast":"West Coast","types":["surf"],"description":"Punchy hollow beach break at the eastern end of Fitzroy beach next to the breakwater. Multiple peaks \u2014 lefts and rights with barrels on offer. W/NW swell + SE offshore. Works all tides. Suitable for most surfers but the shorebreak can get nasty.","local_node":false,"offshoreDir":135,"surfThreshold":{"minWave":0.8,"maxWind":16,"minPeriod":7},"fishThreshold":{"maxWind":14}},{"id":"oakura","name":"Oakura","region":"Taranaki","lat":-39.16,"lon":173.94,"coast":"West Coast","types":["surf","swim","fishing"],"description":"Laid back surf village south of New Plymouth. Good fishing off the rocks.","local_node":false,"offshoreDir":90,"surfThreshold":{"minWave":1.0,"maxWind":16,"minPeriod":8},"fishThreshold":{"maxWind":14}},{"id":"stent-road","name":"Stent Road","region":"Taranaki","lat":-39.28,"lon":173.84,"coast":"West Coast","types":["surf"],"description":"World class right-hand point break over boulders in the shadow of Mt Taranaki. SW groundswell plus easterly offshore winds equals perfection — fast hollow drop, barrelling section, long walling shoulder. One of NZ's premier expert breaks. Locals rule the lineup hard — mind your manners and earn your waves. Best in winter on solid south groundswell.","local_node":false,"offshoreDir":90,"surfThreshold":{"minWave":1.0,"maxWind":16,"minPeriod":8},"fishThreshold":{"maxWind":14}},{"id":"opunake","name":"Opunake","region":"Taranaki","lat":-39.45,"lon":173.86,"coast":"West Coast","types":["surf","swim","fishing"],"description":"Sheltered beach on south Taranaki coast. Consistent surf, good snapper fishing.","local_node":false,"offshoreDir":90,"surfThreshold":{"minWave":1.0,"maxWind":16,"minPeriod":8},"fishThreshold":{"maxWind":14}},{"id":"raglan","name":"Raglan","region":"Waikato","lat":-37.8,"lon":174.87,"coast":"West Coast","types":["surf"],"description":"World famous trio of left-hand point breaks — Indicators, Whale Bay and Manu Bay. SW-W swell wrapping the headland, offshore in SE winds. On the right swell all three can link up for one of the longest rides in the Southern Hemisphere. Indicators is fast and hollow for experts. Manu Bay the classic point, long and walling. Whale Bay mellow and great for longboarders. Serious localism — respect the lineup, no drop-ins. 2026 WSL CT stop.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":16,"minPeriod":8},"fishThreshold":{"maxWind":12},"offshoreDir":135},{"id":"ngarunui","name":"Ngarunui Beach","region":"Waikato","lat":-37.79,"lon":174.84,"coast":"West Coast","types":["surf","swim"],"description":"Patrolled beach break right next to Raglan — more forgiving than the famous points. Lefts and rights on WSW swell, offshore in ESE winds. Good for beginners to intermediate when the points are too intense. Can link up with Raglan peaks on bigger days.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":16,"minPeriod":8},"fishThreshold":{"maxWind":12},"offshoreDir":113},{"id":"mt-maunganui","name":"Mt Maunganui","region":"Bay of Plenty","lat":-37.64,"lon":176.19,"coast":"Bay of Plenty","types":["surf","swim","boating"],"description":"The Mount — NZ's most popular and accessible surf town. Consistent SE groundswell year-round with over 50% surfable days most months. Mix of peaky beach breaks, easy secondary swell for beginners, and harder right-hand points for experienced surfers. Moturiki Island creates interesting sandbanks. Urban and busy but great vibes. Tauranga harbour for boaties. 2026 WSL CT stop.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12},"offshoreDir":202},{"id":"waihi-beach","name":"Waihi Beach","region":"Bay of Plenty","lat":-37.39,"lon":175.93,"coast":"Bay of Plenty","types":["surf","swim"],"description":"Long exposed Bay of Plenty beach picking up most E-NE swell. Multiple peaks along the sand — lefts and rights for all levels. Consistent and fun in the right conditions. Patrolled in summer. Good family beach when small.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"ohope","name":"Ohope Beach","region":"Bay of Plenty","lat":-37.97,"lon":177.1,"coast":"Bay of Plenty","types":["surf","swim","boating"],"description":"Long sheltered beach. Whakatane harbour nearby for boaties.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"opotiki","name":"Opotiki","region":"Bay of Plenty","lat":-38.01,"lon":177.28,"coast":"Bay of Plenty","types":["boating","fishing"],"description":"Waioeka River mouth. Good snapper fishing. Bar crossing requires care.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":15,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"tokomaru-bay","name":"Tokomaru Bay","region":"East Cape","lat":-38.13,"lon":178.33,"coast":"East Coast","types":["surf","fishing"],"description":"Exposed east coast bay. Long walls on decent swell. Remote and uncrowded.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":16,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"tolaga-bay","name":"Tolaga Bay","region":"East Cape","lat":-38.37,"lon":178.3,"coast":"East Coast","types":["surf","fishing","boating"],"description":"Historic bay with long wharf. Consistent east swell. Good fishing.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":16,"minPeriod":9},"fishThreshold":{"maxWind":12}},{"id":"gisborne","name":"Gisborne","region":"East Cape","lat":-38.66,"lon":178.01,"coast":"Poverty Bay","types":["surf","boating","fishing"],"description":"First city to see the sun — exposed to a 180-degree swell window from tropical summer pulses to Southern Ocean winter storm systems. Generally mellower and more accessible than Piha or Northland breaks. Multiple breaks from urban beginner beaches to shapely points and occasional barrels. Dominant SW winds keep many spots offshore. Wainui and Makorori nearby for quality waves. Turanganui River port for boaties.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":16,"minPeriod":9},"fishThreshold":{"maxWind":12},"offshoreDir":315},{"id":"makorori","name":"Makorori","region":"East Cape","lat":-38.56,"lon":178.11,"coast":"East Coast","types":["surf"],"description":"Quality right-hand point break north of Gisborne. SE swell refracts and bends into the bay, offshore in NW winds. Long walling rights that can get hollow on bigger sets. Less crowded than Wainui — worth the short drive north.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":16,"minPeriod":9},"fishThreshold":{"maxWind":12},"offshoreDir":315},{"id":"wainui","name":"Wainui Beach","region":"East Cape","lat":-38.62,"lon":178.1,"coast":"East Coast","types":["surf","swim"],"description":"Gisborne's main surf beach with multiple peaks along the sand. SE-SSE groundswell powers this spot, exposed to a 180-degree swell window from tropical summer pulses to Southern Ocean winter systems. Offshore in NW-WNW winds. Consistent and fun for all levels. Patrolled in summer.","local_node":false,"surfThreshold":{"minWave":1.2,"maxWind":16,"minPeriod":9},"fishThreshold":{"maxWind":12},"offshoreDir":300},{"id":"mahia","name":"Mahia Peninsula","region":"Hawkes Bay","lat":-39.09,"lon":177.96,"coast":"East Coast","types":["surf","fishing","boating"],"description":"Exposed peninsula with multiple breaks. Rocket Lab launch site nearby. Good fishing.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":15,"minPeriod":8},"fishThreshold":{"maxWind":12}},{"id":"wairoa","name":"Wairoa","region":"Hawkes Bay","lat":-39.03,"lon":177.41,"coast":"Hawke's Bay","types":["fishing","boating"],"description":"Wairoa River mouth. Whitebait fishing. Bar crossing can be dangerous.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":15,"minPeriod":8},"fishThreshold":{"maxWind":12}},{"id":"napier","name":"Napier","region":"Hawkes Bay","lat":-39.49,"lon":176.91,"coast":"Hawke's Bay","types":["surf","boating","fishing"],"description":"Art Deco city with exposed shingle beach. Port for offshore fishing charters.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":15,"minPeriod":8},"fishThreshold":{"maxWind":12}},{"id":"ocean-beach-hb","name":"Ocean Beach","region":"Hawkes Bay","lat":-39.64,"lon":177.05,"coast":"Hawke's Bay","types":["surf","fishing"],"description":"Long exposed beach south of Napier. Picks up most swell. Uncrowded.","local_node":false,"surfThreshold":{"minWave":1.0,"maxWind":15,"minPeriod":8},"fishThreshold":{"maxWind":12}},{"id":"castlepoint","name":"Castlepoint","region":"Wairarapa","lat":-40.9,"lon":176.23,"coast":"East Coast","types":["surf","fishing"],"description":"Dramatic headland with lighthouse — one of the Wairarapa coast's most striking spots. Exposed and powerful on SE swell. Can get hollow and heavy on bigger days. Good snapper fishing off the rocks and wharf. Remote and raw — worth the drive.","local_node":false,"surfThreshold":{"minWave":1.3,"maxWind":18,"minPeriod":9},"fishThreshold":{"maxWind":14}},{"id":"palliser-bay","name":"Palliser Bay","region":"Wairarapa","lat":-41.37,"lon":175.28,"coast":"Cook Strait","types":["fishing","boating"],"description":"Wild and remote. Strong Cook Strait winds. Cape Palliser lighthouse. Crayfish diving.","local_node":false,"surfThreshold":{"minWave":1.3,"maxWind":18,"minPeriod":9},"fishThreshold":{"maxWind":14}},{"id":"wellington","name":"Wellington","region":"Wellington","lat":-41.29,"lon":174.78,"coast":"Cook Strait","types":["surf","boating","fishing"],"description":"Windy Wellington — Cook Strait creates powerful and unpredictable conditions. Access to west, east and south coast breaks means there's usually something rideable. Lyall Bay the main surf beach. When onshore at Lyall, Titahi Bay on the west side goes offshore. Wear a 4/3 minimum year-round in the Cook Strait chill.","local_node":false,"surfThreshold":{"minWave":0.8,"maxWind":20,"minPeriod":7},"fishThreshold":{"maxWind":12}},{"id":"lyall-bay","name":"Lyall Bay","region":"Wellington","lat":-41.33,"lon":174.8,"coast":"Cook Strait","types":["surf"],"description":"Wellington's surfing epicentre right beside the airport — the runway forms one of the best points at the west end of the bay. S swell offshore in N winds. Airport point produces a solid left-hander that can get hollow on 8ft+ swell. Multiple peaks spread across the bay. Consistent most of the year — Wellington's windy reputation actually helps. Always busy but good vibes. Works best in summer when winds ease.","local_node":false,"surfThreshold":{"minWave":0.8,"maxWind":20,"minPeriod":7},"fishThreshold":{"maxWind":12},"offshoreDir":0},{"id":"paraparaumu","name":"Paraparaumu","region":"Wellington","lat":-40.91,"lon":174.98,"coast":"Kapiti Coast","types":["surf","boating","fishing"],"description":"Kapiti Coast beach break with Kapiti Island sitting offshore as a landmark and partial swell shadow. Consistent W-SW Tasman swell, offshore in easterlies. Good fishing in the sheltered waters around Kapiti Island. Accessible from Wellington.","local_node":false,"surfThreshold":{"minWave":0.8,"maxWind":20,"minPeriod":7},"fishThreshold":{"maxWind":12}},{"id":"otaki","name":"Otaki Beach","region":"Wellington","lat":-40.76,"lon":175.14,"coast":"Kapiti Coast","types":["surf","fishing"],"description":"Exposed Kapiti Coast beach break picking up W-SW Tasman swell. Offshore in easterlies. Long sandy beach, uncrowded, consistent. Good fishing off the beach. One of the more underrated breaks on the Kapiti Coast.","local_node":false,"surfThreshold":{"minWave":0.8,"maxWind":20,"minPeriod":7},"fishThreshold":{"maxWind":12}}];
+
+// ── STATE ─────────────────────────────────────────────
+let activeFilter = 'all';
+let searchQuery  = '';
+const condCache  = {};
+const REGIONS    = ['Northland','Auckland','Coromandel','Taranaki','Waikato','Bay of Plenty','East Cape','Hawkes Bay','Wairarapa','Wellington'];
+
+// ── RENDER ────────────────────────────────────────────
+function renderAll() {
+  const container = document.getElementById('regionsContainer');
+  const noResults = document.getElementById('noResults');
+  const q = searchQuery.toLowerCase();
+
+  const filtered = LOCATIONS.filter(loc => {
+    const matchSearch = !q ||
+      loc.name.toLowerCase().includes(q) ||
+      loc.region.toLowerCase().includes(q) ||
+      loc.coast.toLowerCase().includes(q);
+    const matchFilter =
+      activeFilter === 'all'  ? true :
+      activeFilter === 'node' ? loc.local_node :
+      loc.types.includes(activeFilter);
+    return matchSearch && matchFilter;
+  });
+
+  if (!filtered.length) {
+    container.innerHTML = '';
+    noResults.style.display = 'block';
+    return;
+  }
+  noResults.style.display = 'none';
+
+  const byRegion = {};
+  REGIONS.forEach(r => byRegion[r] = []);
+  filtered.forEach(loc => {
+    if (!byRegion[loc.region]) byRegion[loc.region] = [];
+    byRegion[loc.region].push(loc);
+  });
+
+  container.innerHTML = REGIONS
+    .filter(r => byRegion[r].length > 0)
+    .map(r => `
+      <div class="region-section">
+        <div class="region-header">
+          <div class="region-name">${r}</div>
+          <div class="region-count">${byRegion[r].length} spot${byRegion[r].length !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="spots-grid">
+          ${byRegion[r].map(spotCard).join('')}
+        </div>
+      </div>
+    `).join('');
+}
+
+function spotCard(loc) {
+  const types = loc.types.map(t => `<span class="ttag tag-${t}">${t}</span>`).join('');
+  const cond = condCache[loc.id];
+  const condHtml = cond
+    ? `<div class="cond-w">💨 ${cond.wind}</div><div class="cond-wv">🌊 ${cond.wave}</div><span class="cpill ${cond.pill}">${cond.label}</span>`
+    : `<div class="cond-loading">LOADING...</div>`;
+
+  return `
+    <a class="spot-card${loc.local_node ? ' has-node' : ''}" href="/spot?id=${loc.id}">
+      ${loc.local_node ? '<div class="node-badge">📡 LOCAL NODE</div>' : ''}
+      <div class="spot-coast">${loc.coast}</div>
+      <div class="spot-name">${loc.name}</div>
+      <div class="spot-desc">${loc.description}</div>
+      <div class="spot-types">${types}</div>
+      <div class="spot-cond" id="sc-${loc.id}">${condHtml}</div>
+      <div class="spot-arrow">↗</div>
+    </a>`;
+}
+
+// ── LOAD CONDITIONS ───────────────────────────────────
+function degToCompass(d) {
+  return ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d/22.5)%16];
+}
+// ── SCORING — identical to stoke.html so cards match stoke meter exactly ──
+function angleDiff(a, b) {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+function calcStokeScore(wind_kn, wind_dir, wave_h, wave_period, offshore_dir, threshold) {
+  const diff = angleDiff(wind_dir, offshore_dir);
+  if (diff > 120) return Math.min(15, Math.round(wave_h * 4));
+  let score = 0;
+  if (wave_h >= threshold.minWave) {
+    const excess = (wave_h - threshold.minWave) / threshold.minWave;
+    score += Math.min(40, 20 + excess * 20);
+  }
+  if (wave_period >= threshold.minPeriod) {
+    const excess = (wave_period - threshold.minPeriod) / 4.0;
+    score += Math.min(25, 15 + excess * 10);
+  }
+  const overWind = wind_kn > threshold.maxWind;
+  let dirPts = 0;
+  if      (diff <= 30)  dirPts = 25;
+  else if (diff <= 60)  dirPts = 18;
+  else if (diff <= 90)  dirPts = 8;
+  else if (diff <= 120) dirPts = 2;
+  if (overWind) dirPts = Math.round(dirPts * 0.3);
+  score += dirPts;
+  if (!overWind) {
+    score += wind_kn <= 8 ? 10 : Math.round((1 - (wind_kn - 8) / (threshold.maxWind - 8)) * 8);
+  }
+  return Math.min(100, Math.round(score));
+}
+
+function calcFishScore(wind_kn, wave_h, threshold) {
+  let score = 0;
+  const sol = solunarRating();
+  score += Math.round((sol / 5) * 35);
+  if (wind_kn <= 10)                    score += 25;
+  else if (wind_kn <= threshold.maxWind) score += Math.round(((threshold.maxWind - wind_kn) / (threshold.maxWind - 10)) * 20);
+  if      (wave_h <= 0.5) score += 20;
+  else if (wave_h <= 1.0) score += 16;
+  else if (wave_h <= 1.5) score += 10;
+  else if (wave_h <= 2.0) score += 4;
+  const h = new Date().getHours();
+  if ((h>=5&&h<=9)||(h>=16&&h<=20)) score += 8; // dawn/dusk bonus
+  return Math.min(100, Math.round(score));
+}
+
+function getAdvisory(wKn, wH) {
+  // Matches spot.html boatAdv() exactly — same thresholds
+  if (wKn > 34 || wH > 3)   return { label:'STAY ASHORE',      pill:'pill-danger' };
+  if (wKn > 22 || wH > 2)   return { label:'EXPERIENCED ONLY', pill:'pill-poor'   };
+  if (wKn > 15 || wH > 1.5) return { label:'CAUTION',          pill:'pill-fair'   };
+  return                           { label:'GOOD TO GO',        pill:'pill-good'   };
+}
+
+// Solunar rating for fishing electrify
+function solunarRating() {
+  const kn = new Date('2024-01-11T00:00:00Z');
+  const ph = ((Date.now()-kn)/86400000 % 29.53 + 29.53) % 29.53 / 29.53;
+  return Math.max(1, Math.round(5 - Math.min(Math.abs(ph-0.5), Math.min(ph,1-ph)) * 20));
+}
+
+async function loadCardCond(loc) {
+  try {
+    const [lr, mr] = await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=wind_speed_10m,wind_direction_10m&timezone=Pacific%2FAuckland&wind_speed_unit=ms`),
+      fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${loc.lat}&longitude=${loc.lon}&current=wave_height,wave_period&timezone=Pacific%2FAuckland`)
+    ]);
+    const ld = await lr.json();
+    const md = await mr.json();
+    const wKn  = (ld.current.wind_speed_10m * 1.94384);
+    const dir  = degToCompass(ld.current.wind_direction_10m);
+    const wH   = md.current?.wave_height ?? 0;
+    const wPer = md.current?.wave_period ?? 0;
+    const adv  = getAdvisory(wKn, wH);
+    condCache[loc.id] = { wind: `${dir} ${wKn.toFixed(0)}kn`, wave: `${wH.toFixed(1)}m`, ...adv };
+
+    // ── Electrify using SAME scoring as stoke meter — cards will always match ──
+    const sol = solunarRating();
+    const surfScore = loc.types.includes('surf') && loc.offshoreDir != null
+      ? calcStokeScore(wKn, ld.current.wind_direction_10m, wH, wPer, loc.offshoreDir, loc.surfThreshold)
+      : 0;
+    const fishScore = loc.types.includes('fishing')
+      ? calcFishScore(wKn, wH, loc.fishThreshold)
+      : 0;
+    const isEpicSurf = surfScore >= 65;
+    const isEpicFish = fishScore >= 65;
+
+    const card = document.querySelector(`a[href="/spot?id=${loc.id}"]`);
+    if (card) {
+      card.classList.toggle('elec-surf', isEpicSurf);
+      card.classList.toggle('elec-fish', isEpicFish);
+    }
+
+    // Badges
+    // Build fishing badge with context
+    let fishBadge = '';
+    if (isEpicFish) {
+      const h = new Date().getHours();
+      const timeTag = (h>=5&&h<=9) ? '🌅 DAWN BITE' : (h>=16&&h<=20) ? '🌇 DUSK BITE' : '🎣 EPIC BITE';
+      const solRating = solunarRating();
+      const solTag  = solRating >= 5 ? '🌕 FULL MOON' : solRating >= 4 ? '🌖 PEAK SOLUNAR' : '🌙 SOLUNAR ACTIVE';
+      const seasTag = wH <= 0.5 ? 'GLASSY' : wH <= 1.0 ? 'FLAT SEAS' : 'CALM SEAS';
+      fishBadge = `<span class="elec-badge elec-badge-fish">${timeTag}</span><span class="elec-badge elec-badge-fish" style="margin-left:3px;">${solTag}</span><span class="elec-badge elec-badge-fish" style="margin-left:3px;">${seasTag}</span>`;
+    }
+    const badges = (isEpicSurf ? '<span class="elec-badge elec-badge-surf">⚡ FIRING</span>' : '') + fishBadge;
+
+    const el = document.getElementById(`sc-${loc.id}`);
+
+    // Only show boating advisory on spots that include boating
+    // Never show it alongside a surf firing badge — different context entirely
+    let advHtml = '';
+    if (loc.types.includes('boating') && !isEpicSurf) {
+      const advContext = adv.label === 'STAY ASHORE'      ? '⛔ STAY ASHORE' :
+                         adv.label === 'EXPERIENCED ONLY' ? '⚠ EXPERIENCED ONLY' :
+                         adv.label === 'CAUTION'          ? '⚠ CAUTION'     : '✓ GOOD TO GO';
+      // Only show warning pills — don't clutter GOOD TO GO spots
+      if (adv.label !== 'GOOD TO GO') {
+        advHtml = `<span class="cpill ${adv.pill}" title="⚓ Boating advisory — wind ${wKn.toFixed(0)}kn, seas ${wH.toFixed(1)}m">⚓ ${advContext}</span>`;
+      }
+    }
+
+    // Surf-only spots: show surf quality label instead of boating advisory
+    let surfQualHtml = '';
+    if (loc.types.includes('surf') && !loc.types.includes('boating')) {
+      if (isEpicSurf) {
+        // Already covered by FIRING badge — no extra label needed
+      } else if (wH < 0.3) {
+        surfQualHtml = `<span class="cpill pill-poor" title="Surf conditions">FLAT</span>`;
+      } else if (wH < 0.7) {
+        surfQualHtml = `<span class="cpill pill-fair" title="Surf conditions">SMALL</span>`;
+      } else if (wKn > 25) {
+        surfQualHtml = `<span class="cpill pill-poor" title="Surf conditions — too windy">BLOWN OUT</span>`;
+      }
+      // Otherwise show nothing — conditions are just average, let numbers speak
+    }
+
+    if (el) el.innerHTML = `<div class="cond-w">💨 ${dir} ${wKn.toFixed(0)}kn</div><div class="cond-wv">🌊 ${wH.toFixed(1)}m</div>${advHtml}${surfQualHtml}${badges}`;
+  } catch(e) {
+    const el = document.getElementById(`sc-${loc.id}`);
+    if (el) el.innerHTML = `<div class="cond-loading" style="opacity:0.4">UNAVAILABLE</div>`;
+  }
+}
+
+async function loadAllConds() {
+  for (let i = 0; i < LOCATIONS.length; i += 4) {
+    await Promise.all(LOCATIONS.slice(i, i + 4).map(loadCardCond));
+    await new Promise(r => setTimeout(r, 400));
+  }
+}
+
+// ── EVENTS ────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  renderAll();
+});
+document.querySelectorAll('.fbtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.f;
+    renderAll();
+  });
+});
+
+// ── XMR ───────────────────────────────────────────────
+function copyXMR(addrId, okId) {
+  const addr = document.getElementById(addrId).innerText.trim();
+  navigator.clipboard.writeText(addr).then(() => {
+    const el = document.getElementById(okId);
+    el.textContent = '✓ ADDRESS COPIED';
+    setTimeout(() => el.textContent = '', 2500);
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────
+renderAll();
+loadAllConds();
+</script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(() => console.log('CoastCheck SW registered'))
+          .catch(err => console.log('SW error:', err));
+      });
+    }
+  </script>
+</body>
+</html>
